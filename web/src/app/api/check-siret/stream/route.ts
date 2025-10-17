@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
           let consecutiveErrors = 0;
           const MAX_CONSECUTIVE_ERRORS = 10; // Augmenté pour plus de tolérance
           const startTime = Date.now();
-          const MAX_EXECUTION_TIME = 4.5 * 60 * 1000; // 4.5 minutes (limite Vercel stricte)
+          const MAX_EXECUTION_TIME = 14 * 60 * 1000; // 14 minutes (marge Vercel Pro)
           
           // Traitement par lots pour éviter les limites de quota
           const BATCH_SIZE = 30; // Restauré aux paramètres qui marchaient en local
@@ -307,4 +307,4 @@ export async function POST(req: NextRequest) {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // 5 minutes (limite Vercel hobby)
+export const maxDuration = 900; // 15 minutes (limite Vercel Pro)
