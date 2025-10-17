@@ -50,11 +50,11 @@ export async function POST(req: NextRequest) {
           let consecutiveErrors = 0;
           const MAX_CONSECUTIVE_ERRORS = 10; // Augmenté pour plus de tolérance
           const startTime = Date.now();
-          const MAX_EXECUTION_TIME = 4.8 * 60 * 1000; // 4.8 minutes (marge de sécurité)
+          const MAX_EXECUTION_TIME = 4.5 * 60 * 1000; // 4.5 minutes (limite Vercel stricte)
           
           // Traitement par lots pour éviter les limites de quota
-          const BATCH_SIZE = 25; // Augmenté pour traiter plus de SIRETs
-          const PAUSE_BETWEEN_BATCHES = 45000; // 45 secondes de pause entre lots
+          const BATCH_SIZE = 30; // Restauré aux paramètres qui marchaient en local
+          const PAUSE_BETWEEN_BATCHES = 60000; // 1 minute de pause entre lots
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
@@ -83,12 +83,12 @@ export async function POST(req: NextRequest) {
             const elapsedTime = Date.now() - startTime;
             const remainingTime = MAX_EXECUTION_TIME - elapsedTime;
             
-            if (remainingTime < 30000) { // Moins de 30s restantes
+            if (remainingTime < 60000) { // Moins de 1 minute restante
               console.log(`⏰ Temps restant: ${Math.round(remainingTime/1000)}s - Traitement accéléré`);
               
               // Traitement accéléré : réduire les pauses et traiter plus rapidement
-              const acceleratedBatchSize = Math.min(10, batchSirets.length);
-              const acceleratedPause = 5000; // 5s au lieu de 45s
+              const acceleratedBatchSize = Math.min(15, batchSirets.length);
+              const acceleratedPause = 2000; // 2s au lieu de 2.4s normal
               
               console.log(`🚀 Mode accéléré: ${acceleratedBatchSize} SIRETs, pause ${acceleratedPause}ms`);
               
