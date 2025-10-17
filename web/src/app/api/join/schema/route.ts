@@ -82,7 +82,7 @@ async function analyzeCsvSchema(status: string, fileName: string, csvContent: st
           sampleData
         });
       },
-      error: (error: any) => {
+      error: (error: unknown) => {
         reject(error);
       }
     });

@@ -25,7 +25,6 @@ export default function Home() {
   const [checked, setChecked] = useState<Checked[] | null>(null);
   const [enabledStatuses, setEnabledStatuses] = useState<EnabledStatuses>(DEFAULT_ENABLED_STATUSES);
   const [loading, setLoading] = useState(false);
-  const [showFileInfo, setShowFileInfo] = useState(false);
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
 
   // Hooks personnalisés
@@ -475,7 +474,7 @@ export default function Home() {
                     <span>Analyse en cours...</span>
                   </>
                 ) : (
-                  <span>Lancez l'analyse</span>
+                  <span>Lancez l&apos;analyse</span>
                 )}
               </button>
               
@@ -510,7 +509,7 @@ export default function Home() {
                 onClick={() => setShowDetailedInfo(!showDetailedInfo)}
                 className="text-sm text-cursor-text-secondary hover:text-cursor-text-primary transition-colors mb-2"
               >
-                {showDetailedInfo ? '▼' : '▶'} Voir plus d'information
+                {showDetailedInfo ? '▼' : '▶'} Voir plus d&apos;information
               </button>
               
               {/* Detailed info section - collapsible */}

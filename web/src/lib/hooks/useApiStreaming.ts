@@ -70,7 +70,7 @@ export function useApiStreaming() {
                 setStreamingResults([...results]);
               } else if (data.type === 'complete') {
                 console.log('[DEBUG] Complete event received:', data);
-                console.log('[DEBUG] Complete results for BLANQUART:', data.results?.find((r: any) => r.siret === '38076713700017'));
+                console.log('[DEBUG] Complete results for BLANQUART:', data.results?.find((r: Checked) => r.siret === '38076713700017'));
                 setStreamingProgress(null);
                 setIsScanning(false);
                 setStreamingResults(data.results);

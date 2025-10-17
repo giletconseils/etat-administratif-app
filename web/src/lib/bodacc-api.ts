@@ -50,7 +50,6 @@ export interface BodaccResult {
 
 // Configuration de l'API BODACC officielle
 const BODACC_BASE_URL_V2 = 'https://www.bodacc.fr/api/explore/v2.1/catalog/datasets/annonces-commerciales/records';
-const BODACC_BASE_URL_V1 = 'https://www.bodacc.fr/api/records/1.0/search/';
 
 // Cache pour éviter les requêtes répétées
 const bodaccCache = new Map<string, { result: BodaccResult; timestamp: number }>();

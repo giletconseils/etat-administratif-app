@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   fetchBodaccProceduresBatch, 
   extractSirenFromSiret, 
-  formatProcedureName,
-  hasActiveProcedures,
   type BodaccResult 
 } from '@/lib/bodacc-api';
 import { Checked } from '@/lib/types';

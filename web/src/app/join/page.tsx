@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 type TableSchema = {
   status: string;
@@ -155,15 +156,15 @@ export default function JoinPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Jointures de données</h1>
             <p className="mt-2 text-sm text-neutral-600">
-              Combinez les données des différents statuts d'entreprises
+              Combinez les données des différents statuts d&apos;entreprises
             </p>
           </div>
-          <a 
+          <Link 
             href="/"
             className="rounded-md border border-[var(--border)] px-4 py-2 text-sm hover:bg-[var(--muted)]"
           >
-            ← Retour à l'application
-          </a>
+            ← Retour à l&apos;application
+          </Link>
         </div>
 
         {/* Statistiques des tables disponibles */}
