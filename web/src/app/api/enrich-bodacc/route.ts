@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         phone: typeof company.phone === 'string' ? company.phone : undefined,
         status_reseau: typeof company.status_reseau === 'string' ? company.status_reseau : undefined,
         fichier_source: typeof company.fichier_source === 'string' ? company.fichier_source : undefined,
-        montant: company.montant || 0,
+        montant: typeof company.montant === 'number' ? company.montant : 0,
         // Nouvelles propriétés BODACC
         procedure,
         procedureType,
