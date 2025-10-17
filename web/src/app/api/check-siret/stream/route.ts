@@ -32,6 +32,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "NO_API_CONFIGURED" }, { status: 500 });
     }
 
+    // Type assertion after null check
+    const apiKey: string = integrationKey;
+
     // Create a readable stream for Server-Sent Events
     const stream = new ReadableStream({
       async start(controller) {
@@ -117,7 +120,7 @@ export async function POST(req: NextRequest) {
                 });
 
                 try {
-                  const inseeResult = await fetchWithIntegrationKey(siret, integrationKey);
+                  const inseeResult = await fetchWithIntegrationKey(siret, apiKey);
                   const enrichedResult = {
                     ...inseeResult,
                     phone: phoneMap.get(inseeResult.siret)
@@ -135,12 +138,13 @@ export async function POST(req: NextRequest) {
                   if (i < acceleratedBatchSize - 1) {
                     await new Promise(resolve => setTimeout(resolve, acceleratedPause));
                   }
-                } catch (error) {
-                  console.error(`❌ Erreur accélérée SIRET ${siret}:`, error);
+                } catch (err: unknown) {
+                  console.error(`❌ Erreur accélérée SIRET ${siret}:`, err);
+                  const errorMessage = err instanceof Error ? err.message : 'UNKNOWN_ERROR';
                   const errorResult = {
                     siret,
                     estRadiee: false,
-                    error: error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+                    error: errorMessage,
                     phone: phoneMap.get(siret)
                   };
                   results.push(errorResult);
@@ -176,7 +180,7 @@ export async function POST(req: NextRequest) {
 
               try {
                 // Requête INSEE seulement (sans BODACC pour simplifier)
-                const inseeResult = await fetchWithIntegrationKey(siret, integrationKey);
+                const inseeResult = await fetchWithIntegrationKey(siret, apiKey);
                 
                 // Toujours ajouter un résultat, même en cas d'erreur
                 const enrichedResult = {
@@ -218,15 +222,16 @@ export async function POST(req: NextRequest) {
                   total: cleaned.length
                 });
 
-              } catch (error) {
-                console.error(`❌ Exception au SIRET #${globalIndex + 1} (${siret}):`, error);
+              } catch (err: unknown) {
+                console.error(`❌ Exception au SIRET #${globalIndex + 1} (${siret}):`, err);
                 consecutiveErrors++;
                 
+                const errorMessage = err instanceof Error ? err.message : 'UNKNOWN_ERROR';
                 // Créer un résultat d'erreur pour ce SIRET
                 const errorResult = {
                   siret,
                   estRadiee: false,
-                  error: error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+                  error: errorMessage,
                   phone: phoneMap.get(siret)
                 };
                 
@@ -276,9 +281,10 @@ export async function POST(req: NextRequest) {
             }
           });
 
-        } catch (error) {
-          console.error('Erreur dans le stream:', error);
-          sendEvent({ type: 'error', message: error instanceof Error ? error.message : 'Erreur inconnue' });
+        } catch (err: unknown) {
+          console.error('Erreur dans le stream:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+          sendEvent({ type: 'error', message: errorMessage });
         } finally {
           controller.close();
         }
@@ -293,8 +299,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Erreur dans la route stream:', error);
+  } catch (err: unknown) {
+    console.error('Erreur dans la route stream:', err);
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
 }
