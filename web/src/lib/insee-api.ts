@@ -118,8 +118,25 @@ export async function fetchWithIntegrationKey(siret: string, integrationKey: str
       return { siret, estRadiee: false, error: `HTTP_${res.status}` };
     }
     
-    const json = (await res.json()) as Record<string, unknown>;
-    const etablissement = json?.etablissement ?? json?.uniteLegale ?? json;
+    type InseeEtablissement = {
+      uniteLegale?: {
+        denominationUniteLegale?: string;
+        nomUniteLegale?: string;
+        etatAdministratifUniteLegale?: string;
+        periodesUniteLegale?: unknown;
+      };
+      denominationUniteLegale?: string;
+      dateCessation?: string | null;
+      periodesEtablissement?: Array<{ dateFin?: string | null }>;
+      statutDiffusionEtablissement?: string;
+      etatAdministratifEtablissement?: string;
+    };
+
+    const raw = (await res.json()) as unknown;
+    const json = (typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {});
+    const etablissement = (
+      (json as any)?.etablissement ?? (json as any)?.uniteLegale ?? (json as any)
+    ) as InseeEtablissement;
     
     if (!etablissement) {
       return { siret, estRadiee: false, error: "INVALID_RESPONSE" };
@@ -167,7 +184,7 @@ export async function fetchWithIntegrationKey(siret: string, integrationKey: str
     return { siret, denomination, estRadiee, dateCessation };
   } catch (e: unknown) {
     console.error(`Network error for SIRET ${siret}:`, e);
-    return { siret, estRadiee: false, error: `NETWORK_ERROR: ${e?.message ?? "unknown"}` };
+    return { siret, estRadiee: false, error: `NETWORK_ERROR: ${(e as any)?.message ?? "unknown"}` };
   }
 }
 
