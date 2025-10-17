@@ -50,11 +50,11 @@ export async function POST(req: NextRequest) {
           let consecutiveErrors = 0;
           const MAX_CONSECUTIVE_ERRORS = 10; // Augmenté pour plus de tolérance
           const startTime = Date.now();
-          const MAX_EXECUTION_TIME = 4.5 * 60 * 1000; // 4.5 minutes (marge de sécurité)
+          const MAX_EXECUTION_TIME = 4.8 * 60 * 1000; // 4.8 minutes (marge de sécurité)
           
           // Traitement par lots pour éviter les limites de quota
-          const BATCH_SIZE = 15; // Réduit à 15 pour s'adapter à la limite Vercel
-          const PAUSE_BETWEEN_BATCHES = 30000; // 30 secondes de pause entre lots
+          const BATCH_SIZE = 25; // Augmenté pour traiter plus de SIRETs
+          const PAUSE_BETWEEN_BATCHES = 45000; // 45 secondes de pause entre lots
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
@@ -80,7 +80,73 @@ export async function POST(req: NextRequest) {
             }
             
             // Vérifier le temps d'exécution avant de traiter le lot
-            if (Date.now() - startTime > MAX_EXECUTION_TIME) {
+            const elapsedTime = Date.now() - startTime;
+            const remainingTime = MAX_EXECUTION_TIME - elapsedTime;
+            
+            if (remainingTime < 30000) { // Moins de 30s restantes
+              console.log(`⏰ Temps restant: ${Math.round(remainingTime/1000)}s - Traitement accéléré`);
+              
+              // Traitement accéléré : réduire les pauses et traiter plus rapidement
+              const acceleratedBatchSize = Math.min(10, batchSirets.length);
+              const acceleratedPause = 5000; // 5s au lieu de 45s
+              
+              console.log(`🚀 Mode accéléré: ${acceleratedBatchSize} SIRETs, pause ${acceleratedPause}ms`);
+              
+              // Traiter rapidement les SIRETs restants
+              for (let i = 0; i < acceleratedBatchSize && i < batchSirets.length; i++) {
+                const globalIndex = batchStart + i;
+                const siret = batchSirets[i];
+                
+                sendEvent({ 
+                  type: 'progress', 
+                  current: globalIndex + 1, 
+                  total: cleaned.length, 
+                  message: `🚀 Mode accéléré - SIRET ${siret}... (${globalIndex + 1}/${cleaned.length})`,
+                  siret: siret
+                });
+
+                try {
+                  const inseeResult = await fetchWithIntegrationKey(siret, integrationKey);
+                  const enrichedResult = {
+                    ...inseeResult,
+                    phone: phoneMap.get(inseeResult.siret)
+                  };
+                  
+                  results.push(enrichedResult);
+                  sendEvent({ 
+                    type: 'result', 
+                    result: enrichedResult,
+                    current: globalIndex + 1,
+                    total: cleaned.length
+                  });
+                  
+                  // Pause minimale
+                  if (i < acceleratedBatchSize - 1) {
+                    await new Promise(resolve => setTimeout(resolve, acceleratedPause));
+                  }
+                } catch (error) {
+                  console.error(`❌ Erreur accélérée SIRET ${siret}:`, error);
+                  const errorResult = {
+                    siret,
+                    estRadiee: false,
+                    error: error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+                    phone: phoneMap.get(siret)
+                  };
+                  results.push(errorResult);
+                  sendEvent({ 
+                    type: 'result', 
+                    result: errorResult,
+                    current: globalIndex + 1,
+                    total: cleaned.length
+                  });
+                }
+              }
+              
+              // Sortir après le traitement accéléré
+              break;
+            }
+            
+            if (elapsedTime > MAX_EXECUTION_TIME) {
               console.log('⏰ Limite de temps atteinte, arrêt du traitement');
               sendEvent({ 
                 type: 'error', 
