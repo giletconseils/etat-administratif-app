@@ -138,9 +138,14 @@ export async function POST(req: NextRequest) {
                   if (i < acceleratedBatchSize - 1) {
                     await new Promise(resolve => setTimeout(resolve, acceleratedPause));
                   }
-                } catch (err: unknown) {
+                } catch (err) {
                   console.error(`❌ Erreur accélérée SIRET ${siret}:`, err);
-                  const errorMessage = err instanceof Error ? err.message : 'UNKNOWN_ERROR';
+                  let errorMessage = 'UNKNOWN_ERROR';
+                  if (err instanceof Error) {
+                    errorMessage = (err as Error).message;
+                  } else if (typeof err === 'string') {
+                    errorMessage = err as string;
+                  }
                   const errorResult = {
                     siret,
                     estRadiee: false,
@@ -222,11 +227,16 @@ export async function POST(req: NextRequest) {
                   total: cleaned.length
                 });
 
-              } catch (err: unknown) {
+              } catch (err) {
                 console.error(`❌ Exception au SIRET #${globalIndex + 1} (${siret}):`, err);
                 consecutiveErrors++;
                 
-                const errorMessage = err instanceof Error ? err.message : 'UNKNOWN_ERROR';
+                let errorMessage = 'UNKNOWN_ERROR';
+                if (err instanceof Error) {
+                  errorMessage = (err as Error).message;
+                } else if (typeof err === 'string') {
+                  errorMessage = err as string;
+                }
                 // Créer un résultat d'erreur pour ce SIRET
                 const errorResult = {
                   siret,
@@ -281,9 +291,14 @@ export async function POST(req: NextRequest) {
             }
           });
 
-        } catch (err: unknown) {
+        } catch (err) {
           console.error('Erreur dans le stream:', err);
-          const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue';
+          let errorMessage = 'Erreur inconnue';
+          if (err instanceof Error) {
+            errorMessage = (err as Error).message;
+          } else if (typeof err === 'string') {
+            errorMessage = err as string;
+          }
           sendEvent({ type: 'error', message: errorMessage });
         } finally {
           controller.close();
@@ -299,7 +314,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-  } catch (err: unknown) {
+  } catch (err) {
     console.error('Erreur dans la route stream:', err);
     return NextResponse.json({ error: "invalid_request" }, { status: 400 });
   }
