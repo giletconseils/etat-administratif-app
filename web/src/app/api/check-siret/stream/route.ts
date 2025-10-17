@@ -49,10 +49,12 @@ export async function POST(req: NextRequest) {
           const results: CompanyStatus[] = [];
           let consecutiveErrors = 0;
           const MAX_CONSECUTIVE_ERRORS = 10; // Augmenté pour plus de tolérance
+          const startTime = Date.now();
+          const MAX_EXECUTION_TIME = 4.5 * 60 * 1000; // 4.5 minutes (marge de sécurité)
           
           // Traitement par lots pour éviter les limites de quota
-          const BATCH_SIZE = 20; // Réduit à 20 pour plus de stabilité
-          const PAUSE_BETWEEN_BATCHES = 90000; // 1.5 minute de pause entre lots
+          const BATCH_SIZE = 15; // Réduit à 15 pour s'adapter à la limite Vercel
+          const PAUSE_BETWEEN_BATCHES = 30000; // 30 secondes de pause entre lots
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
@@ -75,6 +77,17 @@ export async function POST(req: NextRequest) {
                 siret: batchSirets[0]
               });
               await new Promise(resolve => setTimeout(resolve, PAUSE_BETWEEN_BATCHES));
+            }
+            
+            // Vérifier le temps d'exécution avant de traiter le lot
+            if (Date.now() - startTime > MAX_EXECUTION_TIME) {
+              console.log('⏰ Limite de temps atteinte, arrêt du traitement');
+              sendEvent({ 
+                type: 'error', 
+                message: 'Limite de temps Vercel atteinte. Traitement interrompu.',
+                results: results
+              });
+              return;
             }
             
             // Traiter le lot
@@ -218,4 +231,4 @@ export async function POST(req: NextRequest) {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 600; // 10 minutes (adapté pour le traitement par lots avec pauses)
+export const maxDuration = 300; // 5 minutes (limite Vercel hobby)
