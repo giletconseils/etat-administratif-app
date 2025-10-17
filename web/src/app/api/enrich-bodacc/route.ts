@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         estRadiee: company.estRadiee || false,
         dateCessation: typeof company.dateCessation === 'string' ? company.dateCessation : null,
         phone: typeof company.phone === 'string' ? company.phone : undefined,
-        status_reseau: company.status_reseau,
+        status_reseau: typeof company.status_reseau === 'string' ? company.status_reseau : undefined,
         fichier_source: company.fichier_source,
         montant: company.montant || 0,
         // Nouvelles propriétés BODACC
