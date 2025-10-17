@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
           let consecutiveErrors = 0;
           const MAX_CONSECUTIVE_ERRORS = 10; // Augmenté pour plus de tolérance
           const startTime = Date.now();
-          const MAX_EXECUTION_TIME = 14 * 60 * 1000; // 14 minutes (marge Vercel Pro)
+          // MAX_EXECUTION_TIME supprimé - Railway = AUCUNE limite !
+          const MAX_EXECUTION_TIME = Infinity; // Illimité sur Railway !
           
           // Traitement par lots pour éviter les limites de quota
           const BATCH_SIZE = 30; // Restauré aux paramètres qui marchaient en local
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
               await new Promise(resolve => setTimeout(resolve, 10000)); // 10s au lieu de 60s
             }
             
-            if (remainingTime < 120000) { // Moins de 2 minutes restantes
+            if (false) { // Désactivé sur Railway - AUCUNE limite !
               console.log(`⏰ Temps restant: ${Math.round(remainingTime/1000)}s - Traitement accéléré`);
               
               // Traitement accéléré : réduire les pauses et traiter plus rapidement
@@ -156,15 +157,8 @@ export async function POST(req: NextRequest) {
               break;
             }
             
-            if (elapsedTime > MAX_EXECUTION_TIME) {
-              console.log('⏰ Limite de temps atteinte, arrêt du traitement');
-              sendEvent({ 
-                type: 'error', 
-                message: 'Limite de temps Vercel atteinte. Traitement interrompu.',
-                results: results
-              });
-              return;
-            }
+            // Vérification de temps supprimée - Railway = AUCUNE limite !
+            // if (elapsedTime > MAX_EXECUTION_TIME) { ... } // SUPPRIMÉ
             
             // Traiter le lot
             for (let i = 0; i < batchSirets.length; i++) {
@@ -307,4 +301,4 @@ export async function POST(req: NextRequest) {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 900; // 15 minutes (limite Vercel Pro)
+// maxDuration supprimé - Railway = AUCUNE limite !
