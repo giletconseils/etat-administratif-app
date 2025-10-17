@@ -40,7 +40,7 @@ export default function Home() {
   }, [fileProcessing.rows, fileProcessing.headerMap]);
 
   const phoneList = useMemo(() => {
-    const key = fileProcessing.headerMap.siret;
+    const key = fileProcessing.headerMap.phone || fileProcessing.headerMap.siret;
     if (!key || fileProcessing.detectionType !== 'phone') return [] as string[];
     return fileProcessing.rows.map((r) => (r[key] || "").toString());
   }, [fileProcessing.rows, fileProcessing.headerMap, fileProcessing.detectionType]);
@@ -234,6 +234,14 @@ export default function Home() {
       
       if (fileProcessing.detectionType === 'phone') {
         // Cas téléphone : utiliser l'API de jointure par téléphone
+        console.log('[DEBUG] Phone detection - phoneList length:', phoneList.length);
+        console.log('[DEBUG] Phone detection - first 3 phones:', phoneList.slice(0, 3));
+        console.log('[DEBUG] Phone detection - enabledStatuses:', enabledStatuses);
+        
+        if (phoneList.length === 0) {
+          throw new Error('Aucun numéro de téléphone détecté dans le fichier');
+        }
+        
         const phoneJoinData = {
           phones: phoneList,
           enabledStatuses: enabledStatuses
@@ -246,7 +254,9 @@ export default function Home() {
         });
         
         if (!joinRes.ok) {
-          throw new Error(`Erreur API: ${joinRes.status} ${joinRes.statusText}`);
+          const errorText = await joinRes.text();
+          console.error('[DEBUG] API Error response:', errorText);
+          throw new Error(`Erreur API: ${joinRes.status} ${joinRes.statusText} - ${errorText}`);
         }
         
         const joinJson = await joinRes.json() as { result: { matched: SubcontractorData[]; unmatched: { siret: string }[] } };

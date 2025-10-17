@@ -21,6 +21,7 @@ export type Checked = {
 
 export type HeaderMap = { 
   siret?: string; 
+  phone?: string;
   montant?: string 
 };
 

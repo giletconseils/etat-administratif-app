@@ -113,8 +113,31 @@ export async function fetchWithIntegrationKey(siret: string, integrationKey: str
       }
     }
     
+    if (res.status === 500 || res.status === 502 || res.status === 503 || res.status === 504) {
+      // Erreur serveur - réessayer
+      if (retryCount < maxRetries) {
+        const backoffDelay = Math.pow(2, retryCount) * 1000;
+        console.log(`Server error ${res.status} for SIRET ${siret}, retrying in ${backoffDelay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
+        return fetchWithIntegrationKey(siret, integrationKey, retryCount + 1);
+      } else {
+        console.error(`Server error ${res.status} for SIRET ${siret} after ${maxRetries} retries`);
+        return { siret, estRadiee: false, error: `SERVER_ERROR_${res.status}` };
+      }
+    }
+    
+    if (res.status === 403) {
+      // Quota dépassé - erreur fatale
+      console.error(`⛔ QUOTA EXCEEDED for SIRET ${siret} - Clé API bloquée`);
+      const errorText = await res.text();
+      console.error(`Response: ${errorText}`);
+      return { siret, estRadiee: false, error: "QUOTA_EXCEEDED" };
+    }
+    
     if (!res.ok) {
       console.error(`INSEE API error for SIRET ${siret}: ${res.status} ${res.statusText}`);
+      const errorText = await res.text().catch(() => 'Unable to read error');
+      console.error(`Response body: ${errorText}`);
       return { siret, estRadiee: false, error: `HTTP_${res.status}` };
     }
     
@@ -184,6 +207,15 @@ export async function fetchWithIntegrationKey(siret: string, integrationKey: str
     return { siret, denomination, estRadiee, dateCessation };
   } catch (e: unknown) {
     console.error(`Network error for SIRET ${siret}:`, e);
+    
+    // Retry automatique pour les erreurs réseau
+    if (retryCount < maxRetries) {
+      const backoffDelay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+      console.log(`Network error for SIRET ${siret}, retrying in ${backoffDelay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, backoffDelay));
+      return fetchWithIntegrationKey(siret, integrationKey, retryCount + 1);
+    }
+    
     return { siret, estRadiee: false, error: `NETWORK_ERROR: ${(e as Error)?.message ?? "unknown"}` };
   }
 }
@@ -201,6 +233,7 @@ export function cleanSirets(sirets: string[]): string[] {
 }
 
 // Configuration des limites de taux pour l'API INSEE
+// Documentation officielle : 30 requêtes/minute
 export const INSEE_RATE_LIMITS = {
   maxRequestsPerMinute: 25, // Limite conservatrice (INSEE permet 30/min)
   delayBetweenRequests: (60 * 1000) / 25 // ~2.4 secondes par requête
