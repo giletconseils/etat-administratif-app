@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         siret: company.siret,
         denomination: company.denomination,
         estRadiee: company.estRadiee || false,
-        dateCessation: company.dateCessation || null,
+        dateCessation: typeof company.dateCessation === 'string' ? company.dateCessation : null,
         phone: company.phone,
         status_reseau: company.status_reseau,
         fichier_source: company.fichier_source,
