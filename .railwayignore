@@ -1,0 +1,14 @@
+# Ignorer les fichiers de documentation
+*.md
+data/
+RAILWAY_*.md
+SOLUTION_*.md
+DIAGNOSTIC_*.md
+INSEE_*.md
+API_*.md
+BODACC_*.md
+REFACTORING_*.md
+SYSTEME_*.md
+
+# Garder seulement le dossier web
+!web/
