@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
           
           // Traitement par lots pour éviter les limites de quota
           const BATCH_SIZE = 30; // Restauré aux paramètres qui marchaient en local
-          const PAUSE_BETWEEN_BATCHES = 60000; // 1 minute de pause entre lots
+          const PAUSE_BETWEEN_BATCHES = 90000; // 90 secondes de pause entre lots
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
