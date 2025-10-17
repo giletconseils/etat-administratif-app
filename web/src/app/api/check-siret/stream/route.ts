@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
           // MAX_EXECUTION_TIME supprimé - Railway = AUCUNE limite !
           const MAX_EXECUTION_TIME = Infinity; // Illimité sur Railway !
           
-          // Traitement par lots pour éviter les limites de quota
-          const BATCH_SIZE = 30; // Restauré aux paramètres qui marchaient en local
-          const PAUSE_BETWEEN_BATCHES = 60000; // 60 secondes de pause entre lots
+          // ⚡ Optimisation Railway : traitement plus rapide !
+          const BATCH_SIZE = 50; // Augmenté pour plus de rapidité
+          const PAUSE_BETWEEN_BATCHES = 30000; // 30 secondes (réduit de 60s)
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
@@ -70,106 +70,20 @@ export async function POST(req: NextRequest) {
             
             console.log(`📦 Lot ${batchNumber}/${totalBatches}: SIRETs ${batchStart + 1}-${batchEnd} (${batchSirets.length} SIRETs)`);
             
-            // Vérifier le temps d'exécution avant de traiter le lot
-            const elapsedTime = Date.now() - startTime;
-            const remainingTime = MAX_EXECUTION_TIME - elapsedTime;
-            
-            // Pause entre les lots (sauf pour le premier et en mode accéléré)
-            if (batchStart > 0 && remainingTime > 120000) {
+            // Pause simple entre les lots pour respecter les limites API INSEE
+            if (batchStart > 0) {
               console.log(`⏸️  Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s entre les lots...`);
               sendEvent({ 
                 type: 'progress', 
                 current: batchStart, 
                 total: cleaned.length, 
-                message: `⏸️ Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s entre les lots (${batchNumber}/${totalBatches})...`,
+                message: `⏸️ Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s - Lot ${batchNumber}/${totalBatches}`,
                 siret: batchSirets[0]
               });
               await new Promise(resolve => setTimeout(resolve, PAUSE_BETWEEN_BATCHES));
-            } else if (batchStart > 0 && remainingTime <= 120000) {
-              console.log(`🚀 Mode accéléré - Pause réduite à 10s`);
-              sendEvent({ 
-                type: 'progress', 
-                current: batchStart, 
-                total: cleaned.length, 
-                message: `🚀 Mode accéléré - Pause réduite (${batchNumber}/${totalBatches})...`,
-                siret: batchSirets[0]
-              });
-              await new Promise(resolve => setTimeout(resolve, 10000)); // 10s au lieu de 60s
             }
             
-            if (false) { // Désactivé sur Railway - AUCUNE limite !
-              console.log(`⏰ Temps restant: ${Math.round(remainingTime/1000)}s - Traitement accéléré`);
-              
-              // Traitement accéléré : réduire les pauses et traiter plus rapidement
-              const acceleratedBatchSize = Math.min(20, batchSirets.length);
-              const acceleratedPause = 1500; // 1.5s au lieu de 2.4s normal
-              
-              console.log(`🚀 Mode accéléré: ${acceleratedBatchSize} SIRETs, pause ${acceleratedPause}ms`);
-              
-              // Traiter rapidement les SIRETs restants
-              for (let i = 0; i < acceleratedBatchSize && i < batchSirets.length; i++) {
-                const globalIndex = batchStart + i;
-                const siret = batchSirets[i];
-                
-                sendEvent({ 
-                  type: 'progress', 
-                  current: globalIndex + 1, 
-                  total: cleaned.length, 
-                  message: `🚀 Mode accéléré - SIRET ${siret}... (${globalIndex + 1}/${cleaned.length})`,
-                  siret: siret
-                });
-
-                try {
-                  const inseeResult = await fetchWithIntegrationKey(siret, apiKey);
-                  const enrichedResult = {
-                    ...inseeResult,
-                    phone: phoneMap.get(inseeResult.siret)
-                  };
-                  
-                  results.push(enrichedResult);
-                  sendEvent({ 
-                    type: 'result', 
-                    result: enrichedResult,
-                    current: globalIndex + 1,
-                    total: cleaned.length
-                  });
-                  
-                  // Pause minimale
-                  if (i < acceleratedBatchSize - 1) {
-                    await new Promise(resolve => setTimeout(resolve, acceleratedPause));
-                  }
-                } catch (err) {
-                  console.error(`❌ Erreur accélérée SIRET ${siret}:`, err);
-                  let errorMessage = 'UNKNOWN_ERROR';
-                  if (err instanceof Error) {
-                    errorMessage = (err as Error).message;
-                  } else if (typeof err === 'string') {
-                    errorMessage = err as string;
-                  }
-                  const errorResult = {
-                    siret,
-                    estRadiee: false,
-                    error: errorMessage,
-                    phone: phoneMap.get(siret)
-                  };
-                  results.push(errorResult);
-                  sendEvent({ 
-                    type: 'result', 
-                    result: errorResult,
-                    current: globalIndex + 1,
-                    total: cleaned.length
-                  });
-                }
-              }
-              
-              // Sortir après le traitement accéléré
-              break;
-            }
-            
-            // Vérification de temps supprimée - Railway = AUCUNE limite !
-            // if (elapsedTime > MAX_EXECUTION_TIME) { ... } // SUPPRIMÉ
-            
-            // Traiter le lot
+            // Traiter le lot normalement (pas de limite de temps sur Railway !)
             for (let i = 0; i < batchSirets.length; i++) {
               const globalIndex = batchStart + i;
               const siret = batchSirets[i];
@@ -265,12 +179,9 @@ export async function POST(req: NextRequest) {
                 }
               }
 
-              // Wait between requests (respecter la limite de 30 req/min)
+              // Wait between requests (respecter la limite de 30 req/min = 2s par requête)
               if (i < batchSirets.length - 1) {
-                const delay = INSEE_RATE_LIMITS.delayBetweenRequests;
-                // Ajouter un délai supplémentaire si on a eu des erreurs récentes
-                const extraDelay = consecutiveErrors > 0 ? 1000 : 0;
-                await new Promise(resolve => setTimeout(resolve, delay + extraDelay));
+                await new Promise(resolve => setTimeout(resolve, INSEE_RATE_LIMITS.delayBetweenRequests));
               }
             }
             

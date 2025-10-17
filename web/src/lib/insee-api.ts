@@ -235,6 +235,6 @@ export function cleanSirets(sirets: string[]): string[] {
 // Configuration des limites de taux pour l'API INSEE
 // Documentation officielle : 30 requêtes/minute
 export const INSEE_RATE_LIMITS = {
-  maxRequestsPerMinute: 25, // Limite conservatrice (INSEE permet 30/min)
-  delayBetweenRequests: (60 * 1000) / 25 // ~2.4 secondes par requête
+  maxRequestsPerMinute: 30, // Limite max INSEE (30 req/min)
+  delayBetweenRequests: (60 * 1000) / 30 // 2 secondes par requête
 };
