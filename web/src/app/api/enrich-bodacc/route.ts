@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
       }
 
       const enrichedCompany: Checked = {
-        siret: company.siret,
-        denomination: company.denomination,
+        siret: typeof company.siret === 'string' ? company.siret : '',
+        denomination: typeof company.denomination === 'string' ? company.denomination : undefined,
         estRadiee: company.estRadiee || false,
         dateCessation: typeof company.dateCessation === 'string' ? company.dateCessation : null,
         phone: typeof company.phone === 'string' ? company.phone : undefined,
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         procedureType,
         hasActiveProcedures: hasActiveProceduresFlag,
         bodaccError,
-        error: company.error
+        error: typeof company.error === 'string' ? company.error : undefined
       };
 
       enrichedCompanies.push(enrichedCompany);
