@@ -135,7 +135,7 @@ export async function fetchWithIntegrationKey(siret: string, integrationKey: str
     const raw = (await res.json()) as unknown;
     const json = (typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {});
     const etablissement = (
-      (json as any)?.etablissement ?? (json as any)?.uniteLegale ?? (json as any)
+      (json as Record<string, unknown>)?.etablissement ?? (json as Record<string, unknown>)?.uniteLegale ?? (json as Record<string, unknown>)
     ) as InseeEtablissement;
     
     if (!etablissement) {
@@ -184,7 +184,7 @@ export async function fetchWithIntegrationKey(siret: string, integrationKey: str
     return { siret, denomination, estRadiee, dateCessation };
   } catch (e: unknown) {
     console.error(`Network error for SIRET ${siret}:`, e);
-    return { siret, estRadiee: false, error: `NETWORK_ERROR: ${(e as any)?.message ?? "unknown"}` };
+    return { siret, estRadiee: false, error: `NETWORK_ERROR: ${(e as Error)?.message ?? "unknown"}` };
   }
 }
 
