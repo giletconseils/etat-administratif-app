@@ -1,5 +1,6 @@
 [build]
 builder = "nixpacks"
+buildCommand = "cd web && npm install"
 
 [deploy]
 startCommand = "cd web && npm run start"
