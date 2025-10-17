@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
         dateCessation: typeof company.dateCessation === 'string' ? company.dateCessation : null,
         phone: typeof company.phone === 'string' ? company.phone : undefined,
         status_reseau: typeof company.status_reseau === 'string' ? company.status_reseau : undefined,
-        fichier_source: company.fichier_source,
+        fichier_source: typeof company.fichier_source === 'string' ? company.fichier_source : undefined,
         montant: company.montant || 0,
         // Nouvelles propriétés BODACC
         procedure,
