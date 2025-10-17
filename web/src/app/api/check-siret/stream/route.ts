@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
           
           // Traitement par lots pour éviter les limites de quota
           const BATCH_SIZE = 30; // Restauré aux paramètres qui marchaient en local
-          const PAUSE_BETWEEN_BATCHES = 90000; // 90 secondes de pause entre lots
+          const PAUSE_BETWEEN_BATCHES = 60000; // 60 secondes de pause entre lots
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
@@ -66,8 +66,12 @@ export async function POST(req: NextRequest) {
             
             console.log(`📦 Lot ${batchNumber}/${totalBatches}: SIRETs ${batchStart + 1}-${batchEnd} (${batchSirets.length} SIRETs)`);
             
-            // Pause entre les lots (sauf pour le premier)
-            if (batchStart > 0) {
+            // Vérifier le temps d'exécution avant de traiter le lot
+            const elapsedTime = Date.now() - startTime;
+            const remainingTime = MAX_EXECUTION_TIME - elapsedTime;
+            
+            // Pause entre les lots (sauf pour le premier et en mode accéléré)
+            if (batchStart > 0 && remainingTime > 120000) {
               console.log(`⏸️  Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s entre les lots...`);
               sendEvent({ 
                 type: 'progress', 
@@ -77,18 +81,24 @@ export async function POST(req: NextRequest) {
                 siret: batchSirets[0]
               });
               await new Promise(resolve => setTimeout(resolve, PAUSE_BETWEEN_BATCHES));
+            } else if (batchStart > 0 && remainingTime <= 120000) {
+              console.log(`🚀 Mode accéléré - Pause réduite à 10s`);
+              sendEvent({ 
+                type: 'progress', 
+                current: batchStart, 
+                total: cleaned.length, 
+                message: `🚀 Mode accéléré - Pause réduite (${batchNumber}/${totalBatches})...`,
+                siret: batchSirets[0]
+              });
+              await new Promise(resolve => setTimeout(resolve, 10000)); // 10s au lieu de 60s
             }
             
-            // Vérifier le temps d'exécution avant de traiter le lot
-            const elapsedTime = Date.now() - startTime;
-            const remainingTime = MAX_EXECUTION_TIME - elapsedTime;
-            
-            if (remainingTime < 60000) { // Moins de 1 minute restante
+            if (remainingTime < 120000) { // Moins de 2 minutes restantes
               console.log(`⏰ Temps restant: ${Math.round(remainingTime/1000)}s - Traitement accéléré`);
               
               // Traitement accéléré : réduire les pauses et traiter plus rapidement
-              const acceleratedBatchSize = Math.min(15, batchSirets.length);
-              const acceleratedPause = 2000; // 2s au lieu de 2.4s normal
+              const acceleratedBatchSize = Math.min(20, batchSirets.length);
+              const acceleratedPause = 1500; // 1.5s au lieu de 2.4s normal
               
               console.log(`🚀 Mode accéléré: ${acceleratedBatchSize} SIRETs, pause ${acceleratedPause}ms`);
               
