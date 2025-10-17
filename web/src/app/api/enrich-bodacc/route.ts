@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         denomination: company.denomination,
         estRadiee: company.estRadiee || false,
         dateCessation: typeof company.dateCessation === 'string' ? company.dateCessation : null,
-        phone: company.phone,
+        phone: typeof company.phone === 'string' ? company.phone : undefined,
         status_reseau: company.status_reseau,
         fichier_source: company.fichier_source,
         montant: company.montant || 0,
