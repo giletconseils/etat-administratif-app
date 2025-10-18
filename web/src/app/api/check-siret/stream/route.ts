@@ -6,6 +6,7 @@ import {
   cleanSirets, 
   INSEE_RATE_LIMITS 
 } from "@/lib/insee-api";
+import { fetchBodaccProcedures } from "@/lib/bodacc-api";
 
 export async function POST(req: NextRequest) {
   try {
@@ -98,13 +99,27 @@ export async function POST(req: NextRequest) {
               });
 
               try {
-                // Requête INSEE seulement (sans BODACC pour simplifier)
+                // Requête INSEE
                 const inseeResult = await fetchWithIntegrationKey(siret, apiKey);
                 
-                // Toujours ajouter un résultat, même en cas d'erreur
-                const enrichedResult = {
+                // Requête BODACC pour vérifier les procédures
+                let bodaccInfo = null;
+                if (!inseeResult.error) {
+                  try {
+                    const siren = siret.substring(0, 9);
+                    bodaccInfo = await fetchBodaccProcedures(siren);
+                  } catch (bodaccErr) {
+                    console.warn(`⚠️  Erreur BODACC pour SIRET ${siret}:`, bodaccErr);
+                  }
+                }
+                
+                // Combiner les résultats INSEE + BODACC
+                const enrichedResult: CompanyStatus = {
                   ...inseeResult,
-                  phone: phoneMap.get(inseeResult.siret)
+                  phone: phoneMap.get(inseeResult.siret),
+                  hasActiveProcedures: bodaccInfo?.hasActiveProcedures || false,
+                  procedure: bodaccInfo?.procedures?.[0]?.name,
+                  procedureType: bodaccInfo?.procedures?.[0]?.type
                 };
                 
                 // Gestion des erreurs INSEE avec retry automatique
