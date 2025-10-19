@@ -125,6 +125,66 @@ export default function Home() {
     }
   };
 
+  // Fonction de test limite HTTP/2
+  const runHttp2LimitTest = async (testSize: number = 400) => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/test-http2-limit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testSize }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors du test limite HTTP/2');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Impossible de lire le stream de test');
+      }
+
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.type === 'progress') {
+                console.log(`🔥 Test HTTP/2: ${data.message}`);
+              } else if (data.type === 'http2_error') {
+                console.error(`🔥 ERREUR HTTP/2 DÉTECTÉE: ${data.message}`);
+                alert(`🔥 ERREUR HTTP/2 DÉTECTÉE après ${data.requestCount} requêtes !`);
+              } else if (data.type === 'complete') {
+                console.log('🔥 Test HTTP/2 terminé:', data.stats);
+                if (data.stats.http2ErrorDetected) {
+                  alert('🔥 Test terminé - Erreur HTTP/2 détectée !');
+                } else {
+                  alert('✅ Test terminé - Aucune erreur HTTP/2 détectée !');
+                }
+                return;
+              }
+            } catch (e) {
+              console.error('Erreur parsing SSE data:', e);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du test limite HTTP/2:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const runBaseProcess = async () => {
     setLoading(true);
     apiStreaming.startScan();
@@ -518,6 +578,17 @@ export default function Home() {
                   className="flex-1 text-sm text-white bg-orange-600 hover:bg-orange-700 px-3 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   🧪 Test 100 SIRETs
+                </button>
+              </div>
+              
+              {/* Test HTTP/2 Limit */}
+              <div className="mt-2">
+                <button
+                  onClick={() => runHttp2LimitTest(400)}
+                  disabled={loading || testMode.isTestRunning}
+                  className="w-full text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  🔥 Test Limite HTTP/2 (400 SIRETs) - Reproduire l&apos;erreur après 322 requêtes
                 </button>
               </div>
               
