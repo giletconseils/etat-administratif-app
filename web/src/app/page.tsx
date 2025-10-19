@@ -14,6 +14,7 @@ import { createAmountMap, enrichWithAmounts, calculateTotalAmount } from "../lib
 import { useFileProcessing } from "@/lib/hooks/useFileProcessing";
 import { useApiStreaming } from "@/lib/hooks/useApiStreaming";
 import { useBodaccEnrichment } from "@/lib/hooks/useBodaccEnrichment";
+import { useTestMode } from "@/lib/hooks/useTestMode";
 
 // Composants
 import { StatusSelector } from "@/components/StatusSelector";
@@ -31,6 +32,7 @@ export default function Home() {
   const fileProcessing = useFileProcessing();
   const apiStreaming = useApiStreaming();
   const bodaccEnrichment = useBodaccEnrichment();
+  const testMode = useTestMode();
 
   // Calculs dérivés
   const siretList = useMemo(() => {
@@ -108,6 +110,19 @@ export default function Home() {
     apiStreaming.reset();
     fileProcessing.reset();
     bodaccEnrichment.resetEnrichment();
+    testMode.resetTest();
+  };
+
+  // Fonction de test rapide
+  const runQuickTest = async (testSize: number = 50) => {
+    setLoading(true);
+    try {
+      await testMode.startTest(testSize);
+    } catch (error) {
+      console.error('Erreur lors du test:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const runBaseProcess = async () => {
@@ -475,7 +490,7 @@ export default function Home() {
             <div className="pt-4 border-t border-cursor-border-primary">
               <button
                 onClick={runCompleteProcess}
-                disabled={loading}
+                disabled={loading || testMode.isTestRunning}
                 className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
@@ -488,17 +503,38 @@ export default function Home() {
                 )}
               </button>
               
+              {/* Test buttons */}
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => runQuickTest(25)}
+                  disabled={loading || testMode.isTestRunning}
+                  className="flex-1 text-sm text-white bg-green-600 hover:bg-green-700 px-3 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  🧪 Test 25 SIRETs
+                </button>
+                <button
+                  onClick={() => runQuickTest(100)}
+                  disabled={loading || testMode.isTestRunning}
+                  className="flex-1 text-sm text-white bg-orange-600 hover:bg-orange-700 px-3 py-2 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  🧪 Test 100 SIRETs
+                </button>
+              </div>
+              
               {/* Secondary actions - minimal like CURSOR */}
               <div className="flex items-center justify-center gap-3 mt-3">
-                {apiStreaming.isScanning && (
+                {(apiStreaming.isScanning || testMode.isTestRunning) && (
                   <button
-                    onClick={apiStreaming.stopScan}
-                    className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors"
+                    onClick={() => {
+                      if (apiStreaming.isScanning) apiStreaming.stopScan();
+                      if (testMode.isTestRunning) testMode.stopTest();
+                    }}
+                    className="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors"
                   >
                     Arrêter
                   </button>
                 )}
-                {checked && (
+                {(checked || testMode.testResults.length > 0) && (
                   <button
                     onClick={resetProcess}
                     disabled={loading}
@@ -636,6 +672,32 @@ export default function Home() {
                 <div 
                   className="bg-cursor-accent-blue h-2 rounded-full transition-all duration-300"
                   style={{ width: `${(apiStreaming.streamingProgress.current / apiStreaming.streamingProgress.total) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Test mode progress */}
+        {testMode.testProgress && (
+          <div className="card-surface p-6 mb-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-cursor-text-primary">🧪 Mode Test</h3>
+              <div className="flex items-center gap-3">
+                <div className="text-sm text-cursor-text-secondary">
+                  {testMode.testProgress.current} / {testMode.testProgress.total}
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm text-cursor-text-secondary">{testMode.testProgress.message}</span>
+              </div>
+              <div className="w-full bg-cursor-bg-tertiary rounded-full h-2">
+                <div 
+                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(testMode.testProgress.current / testMode.testProgress.total) * 100}%` }}
                 ></div>
               </div>
             </div>

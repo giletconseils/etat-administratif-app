@@ -61,10 +61,11 @@ export async function POST(req: NextRequest) {
           const MAX_EXECUTION_TIME = Infinity; // Illimité sur Railway !
           
           // ⚡ Optimisation Railway : traitement plus rapide !
-          const BATCH_SIZE = 50; // Augmenté pour plus de rapidité
-          const PAUSE_BETWEEN_BATCHES = 30000; // 30 secondes (réduit de 60s)
-          const HEARTBEAT_INTERVAL = 60000; // Heartbeat toutes les 60s pour maintenir la connexion
-          const LONG_PAUSE_AFTER = 300; // Pause longue après 300 requêtes
+          const BATCH_SIZE = 25; // Réduit pour éviter les timeouts HTTP/2
+          const PAUSE_BETWEEN_BATCHES = 45000; // 45 secondes pour laisser respirer HTTP/2
+          const HEARTBEAT_INTERVAL = 30000; // Heartbeat toutes les 30s pour maintenir la connexion
+          const LONG_PAUSE_AFTER = 200; // Pause longue après 200 requêtes (réduit de 300)
+          const CONNECTION_RESET_AFTER = 150; // Reset de connexion après 150 requêtes
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
@@ -87,10 +88,13 @@ export async function POST(req: NextRequest) {
             
             // Pause entre les lots pour respecter les limites API INSEE
             if (batchStart > 0) {
-              // Pause longue après 300 requêtes pour éviter les timeouts HTTP/2
+              // Pause longue après 200 requêtes pour éviter les timeouts HTTP/2
               const isLongPause = batchStart >= LONG_PAUSE_AFTER;
+              const isConnectionReset = batchStart >= CONNECTION_RESET_AFTER;
               const pauseDuration = isLongPause ? PAUSE_BETWEEN_BATCHES * 2 : PAUSE_BETWEEN_BATCHES;
-              const pauseMessage = isLongPause ? 
+              const pauseMessage = isConnectionReset ? 
+                `🔄 Reset connexion HTTP/2 après ${pauseDuration / 1000}s - Lot ${batchNumber}/${totalBatches}` :
+                isLongPause ? 
                 `⏸️ Pause longue de ${pauseDuration / 1000}s (éviter timeout HTTP/2) - Lot ${batchNumber}/${totalBatches}` :
                 `⏸️ Pause de ${pauseDuration / 1000}s - Lot ${batchNumber}/${totalBatches}`;
               
@@ -103,6 +107,17 @@ export async function POST(req: NextRequest) {
                 siret: batchSirets[0]
               });
               await new Promise(resolve => setTimeout(resolve, pauseDuration));
+              
+              // Reset de connexion pour éviter les erreurs HTTP/2
+              if (isConnectionReset) {
+                console.log('🔄 Envoi d\'un heartbeat pour reset de connexion...');
+                sendEvent({ 
+                  type: 'heartbeat', 
+                  timestamp: Date.now(),
+                  message: 'Reset de connexion HTTP/2...'
+                });
+                await new Promise(resolve => setTimeout(resolve, 5000)); // Pause supplémentaire
+              }
             }
             
             // Traiter le lot normalement (pas de limite de temps sur Railway !)
@@ -120,8 +135,41 @@ export async function POST(req: NextRequest) {
               });
 
               try {
-                // Requête INSEE
-                const inseeResult = await fetchWithIntegrationKey(siret, apiKey);
+                // Requête INSEE avec retry automatique
+                let inseeResult: CompanyStatus | undefined;
+                let retryCount = 0;
+                const MAX_RETRIES = 3;
+                
+                while (retryCount <= MAX_RETRIES) {
+                  try {
+                    inseeResult = await fetchWithIntegrationKey(siret, apiKey);
+                    break; // Succès, sortir de la boucle
+                  } catch (retryError) {
+                    retryCount++;
+                    if (retryCount > MAX_RETRIES) {
+                      throw retryError; // Re-lancer l'erreur après tous les essais
+                    }
+                    
+                    // Backoff exponentiel : 2s, 4s, 8s
+                    const backoffDelay = Math.pow(2, retryCount) * 1000;
+                    console.warn(`⚠️  Retry ${retryCount}/${MAX_RETRIES} pour SIRET ${siret} dans ${backoffDelay}ms`);
+                    
+                    sendEvent({ 
+                      type: 'progress', 
+                      current: globalIndex + 1, 
+                      total: cleaned.length, 
+                      message: `Retry ${retryCount}/${MAX_RETRIES} pour SIRET ${siret}...`,
+                      siret: siret
+                    });
+                    
+                    await new Promise(resolve => setTimeout(resolve, backoffDelay));
+                  }
+                }
+                
+                // Vérifier que inseeResult a été assigné
+                if (!inseeResult) {
+                  throw new Error('Impossible d\'obtenir le résultat INSEE après tous les essais');
+                }
                 
                 // Requête BODACC pour vérifier les procédures
                 let bodaccInfo = null;
@@ -137,7 +185,8 @@ export async function POST(req: NextRequest) {
                 // Combiner les résultats INSEE + BODACC
                 const enrichedResult: CompanyStatus = {
                   ...inseeResult,
-                  phone: phoneMap.get(inseeResult.siret),
+                  siret: inseeResult.siret || siret, // Garantir que siret n'est pas undefined
+                  phone: phoneMap.get(inseeResult.siret || siret),
                   hasActiveProcedures: bodaccInfo?.hasActiveProcedures || false,
                   procedure: bodaccInfo?.procedures?.[0]?.name,
                   procedureType: bodaccInfo?.procedures?.[0]?.type
