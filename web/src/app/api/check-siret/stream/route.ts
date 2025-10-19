@@ -46,6 +46,9 @@ export async function POST(req: NextRequest) {
           controller.enqueue(encoder.encode(event));
         };
 
+        // Variables pour le heartbeat
+        let heartbeatInterval: NodeJS.Timeout | undefined;
+
         try {
           // Send initial progress
           sendEvent({ type: 'progress', current: 0, total: cleaned.length, message: 'Début de la vérification...' });
@@ -60,8 +63,19 @@ export async function POST(req: NextRequest) {
           // ⚡ Optimisation Railway : traitement plus rapide !
           const BATCH_SIZE = 50; // Augmenté pour plus de rapidité
           const PAUSE_BETWEEN_BATCHES = 30000; // 30 secondes (réduit de 60s)
+          const HEARTBEAT_INTERVAL = 60000; // Heartbeat toutes les 60s pour maintenir la connexion
+          const LONG_PAUSE_AFTER = 300; // Pause longue après 300 requêtes
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
+
+          // Heartbeat pour maintenir la connexion HTTP/2
+          heartbeatInterval = setInterval(() => {
+            sendEvent({ 
+              type: 'heartbeat', 
+              timestamp: Date.now(),
+              message: 'Connexion maintenue...'
+            });
+          }, HEARTBEAT_INTERVAL);
 
           for (let batchStart = 0; batchStart < cleaned.length; batchStart += BATCH_SIZE) {
             const batchEnd = Math.min(batchStart + BATCH_SIZE, cleaned.length);
@@ -71,17 +85,24 @@ export async function POST(req: NextRequest) {
             
             console.log(`📦 Lot ${batchNumber}/${totalBatches}: SIRETs ${batchStart + 1}-${batchEnd} (${batchSirets.length} SIRETs)`);
             
-            // Pause simple entre les lots pour respecter les limites API INSEE
+            // Pause entre les lots pour respecter les limites API INSEE
             if (batchStart > 0) {
-              console.log(`⏸️  Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s entre les lots...`);
+              // Pause longue après 300 requêtes pour éviter les timeouts HTTP/2
+              const isLongPause = batchStart >= LONG_PAUSE_AFTER;
+              const pauseDuration = isLongPause ? PAUSE_BETWEEN_BATCHES * 2 : PAUSE_BETWEEN_BATCHES;
+              const pauseMessage = isLongPause ? 
+                `⏸️ Pause longue de ${pauseDuration / 1000}s (éviter timeout HTTP/2) - Lot ${batchNumber}/${totalBatches}` :
+                `⏸️ Pause de ${pauseDuration / 1000}s - Lot ${batchNumber}/${totalBatches}`;
+              
+              console.log(pauseMessage);
               sendEvent({ 
                 type: 'progress', 
                 current: batchStart, 
                 total: cleaned.length, 
-                message: `⏸️ Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s - Lot ${batchNumber}/${totalBatches}`,
+                message: pauseMessage,
                 siret: batchSirets[0]
               });
-              await new Promise(resolve => setTimeout(resolve, PAUSE_BETWEEN_BATCHES));
+              await new Promise(resolve => setTimeout(resolve, pauseDuration));
             }
             
             // Traiter le lot normalement (pas de limite de temps sur Railway !)
@@ -227,6 +248,10 @@ export async function POST(req: NextRequest) {
           }
           sendEvent({ type: 'error', message: errorMessage });
         } finally {
+          // Nettoyer le heartbeat
+          if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+          }
           controller.close();
         }
       }
