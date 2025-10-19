@@ -56,9 +56,7 @@ export async function POST(req: NextRequest) {
           const results: CompanyStatus[] = [];
           let consecutiveErrors = 0;
           const MAX_CONSECUTIVE_ERRORS = 10; // Augmenté pour plus de tolérance
-          const startTime = Date.now();
           // MAX_EXECUTION_TIME supprimé - Railway = AUCUNE limite !
-          const MAX_EXECUTION_TIME = Infinity; // Illimité sur Railway !
           
           // ⚡ Optimisation Railway : traitement plus rapide !
           const BATCH_SIZE = 25; // Réduit pour éviter les timeouts HTTP/2

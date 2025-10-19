@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { 
-  SirenCheckInput, 
   CompanyStatus, 
   fetchWithIntegrationKey, 
   cleanSirets, 
@@ -123,7 +122,7 @@ export async function POST(req: NextRequest) {
 
               try {
                 // Requête INSEE avec retry
-                let inseeResult;
+                let inseeResult: CompanyStatus | undefined;
                 let retryCount = 0;
                 const MAX_RETRIES = 2; // Moins de retries pour le test
                 
@@ -150,6 +149,11 @@ export async function POST(req: NextRequest) {
                     
                     await new Promise(resolve => setTimeout(resolve, backoffDelay));
                   }
+                }
+                
+                // Vérifier que inseeResult a été assigné
+                if (!inseeResult) {
+                  throw new Error('Impossible d\'obtenir le résultat INSEE après tous les essais');
                 }
                 
                 results.push(inseeResult);
