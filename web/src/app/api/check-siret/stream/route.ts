@@ -58,12 +58,10 @@ export async function POST(req: NextRequest) {
           const MAX_CONSECUTIVE_ERRORS = 10; // Augmenté pour plus de tolérance
           // MAX_EXECUTION_TIME supprimé - Railway = AUCUNE limite !
           
-          // ⚡ Optimisation Railway : traitement plus rapide !
-          const BATCH_SIZE = 25; // Réduit pour éviter les timeouts HTTP/2
-          const PAUSE_BETWEEN_BATCHES = 45000; // 45 secondes pour laisser respirer HTTP/2
-          const HEARTBEAT_INTERVAL = 30000; // Heartbeat toutes les 30s pour maintenir la connexion
-          const LONG_PAUSE_AFTER = 200; // Pause longue après 200 requêtes (réduit de 300)
-          const CONNECTION_RESET_AFTER = 150; // Reset de connexion après 150 requêtes
+          // ⚡ Optimisation avec HTTP/1.1 forcé
+          const BATCH_SIZE = 50; // Retour à la taille normale
+          const PAUSE_BETWEEN_BATCHES = 30000; // 30 secondes (retour à la normale)
+          const HEARTBEAT_INTERVAL = 60000; // Heartbeat toutes les 60s
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
@@ -86,36 +84,15 @@ export async function POST(req: NextRequest) {
             
             // Pause entre les lots pour respecter les limites API INSEE
             if (batchStart > 0) {
-              // Pause longue après 200 requêtes pour éviter les timeouts HTTP/2
-              const isLongPause = batchStart >= LONG_PAUSE_AFTER;
-              const isConnectionReset = batchStart >= CONNECTION_RESET_AFTER;
-              const pauseDuration = isLongPause ? PAUSE_BETWEEN_BATCHES * 2 : PAUSE_BETWEEN_BATCHES;
-              const pauseMessage = isConnectionReset ? 
-                `🔄 Reset connexion HTTP/2 après ${pauseDuration / 1000}s - Lot ${batchNumber}/${totalBatches}` :
-                isLongPause ? 
-                `⏸️ Pause longue de ${pauseDuration / 1000}s (éviter timeout HTTP/2) - Lot ${batchNumber}/${totalBatches}` :
-                `⏸️ Pause de ${pauseDuration / 1000}s - Lot ${batchNumber}/${totalBatches}`;
-              
-              console.log(pauseMessage);
+              console.log(`⏸️ Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s - Lot ${batchNumber}/${totalBatches}`);
               sendEvent({ 
                 type: 'progress', 
                 current: batchStart, 
                 total: cleaned.length, 
-                message: pauseMessage,
+                message: `⏸️ Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s - Lot ${batchNumber}/${totalBatches}`,
                 siret: batchSirets[0]
               });
-              await new Promise(resolve => setTimeout(resolve, pauseDuration));
-              
-              // Reset de connexion pour éviter les erreurs HTTP/2
-              if (isConnectionReset) {
-                console.log('🔄 Envoi d\'un heartbeat pour reset de connexion...');
-                sendEvent({ 
-                  type: 'heartbeat', 
-                  timestamp: Date.now(),
-                  message: 'Reset de connexion HTTP/2...'
-                });
-                await new Promise(resolve => setTimeout(resolve, 5000)); // Pause supplémentaire
-              }
+              await new Promise(resolve => setTimeout(resolve, PAUSE_BETWEEN_BATCHES));
             }
             
             // Traiter le lot normalement (pas de limite de temps sur Railway !)

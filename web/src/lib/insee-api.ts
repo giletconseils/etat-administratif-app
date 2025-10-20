@@ -48,6 +48,7 @@ export async function getInseeAccessToken(): Promise<string | null> {
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/x-www-form-urlencoded",
+        "Connection": "close", // Forcer HTTP/1.1
       },
       body: body.toString(),
       cache: "no-store",
@@ -90,6 +91,7 @@ export async function fetchWithIntegrationKey(siret: string, integrationKey: str
       headers: {
         "X-INSEE-Api-Key-Integration": integrationKey,
         Accept: "application/json",
+        "Connection": "close", // Forcer HTTP/1.1
       },
       cache: "no-store",
     });
