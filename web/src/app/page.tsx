@@ -185,10 +185,8 @@ export default function Home() {
         return newResults;
       });
       
-      // Débloquer le chunk suivant
-      if (chunkIndex < siretChunks.length - 1) {
-        setCurrentChunkIndex(chunkIndex + 1);
-      }
+      // Marquer ce chunk comme traité et mettre à jour l'index courant
+      setCurrentChunkIndex(chunkIndex);
       
     } catch (error) {
       console.error(`Erreur lors du traitement du chunk ${chunkIndex + 1}:`, error);
@@ -672,22 +670,8 @@ export default function Home() {
           <div className="card-surface p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-cursor-text-primary">Traitement par Chunks</h3>
-              <div className="flex items-center gap-3">
-                <div className="text-sm text-cursor-text-secondary">
-                  {siretChunks.length} chunks de max 200 SIRETs (optimisé pour la rapidité)
-                </div>
-                <button
-                  onClick={() => {
-                    // Traiter tous les chunks automatiquement
-                    for (let i = 0; i < siretChunks.length; i++) {
-                      setTimeout(() => processChunk(i), i * 1000); // 1 seconde entre chaque chunk
-                    }
-                  }}
-                  disabled={chunkProcessing.some(processing => processing)}
-                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  🚀 Traiter tous les chunks
-                </button>
+              <div className="text-sm text-cursor-text-secondary">
+                {siretChunks.length} chunks de max 200 SIRETs (optimisé pour la rapidité)
               </div>
             </div>
             
@@ -695,29 +679,36 @@ export default function Home() {
               {siretChunks.map((chunk, index) => {
                 const isProcessed = chunkResults[index] !== null;
                 const isProcessing = chunkProcessing[index];
-                const canProcess = index === 0 || chunkResults[index - 1] !== null;
                 const isCurrent = index === currentChunkIndex;
                 
                 return (
                   <div key={index} className={`p-4 rounded-lg border ${
-                    isCurrent ? 'border-blue-500 bg-blue-50' : 
-                    isProcessed ? 'border-green-500 bg-green-50' : 
-                    canProcess ? 'border-gray-300 bg-gray-50' : 'border-gray-200 bg-gray-25'
+                    isCurrent ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 
+                    isProcessed ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 
+                    'border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-600'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                           isProcessed ? 'bg-green-500 text-white' :
                           isProcessing ? 'bg-blue-500 text-white animate-pulse' :
-                          canProcess ? 'bg-gray-500 text-white' : 'bg-gray-300 text-gray-600'
+                          'bg-gray-500 text-white'
                         }`}>
                           {isProcessed ? '✓' : index + 1}
                         </div>
                         <div>
-                          <div className="font-medium">
+                          <div className={`font-medium ${
+                            isCurrent ? 'text-blue-900 dark:text-blue-100' :
+                            isProcessed ? 'text-green-900 dark:text-green-100' :
+                            'text-gray-900 dark:text-gray-100'
+                          }`}>
                             Chunk {index + 1} - {chunk.length} SIRETs
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className={`text-sm ${
+                            isCurrent ? 'text-blue-700 dark:text-blue-300' :
+                            isProcessed ? 'text-green-700 dark:text-green-300' :
+                            'text-gray-600 dark:text-gray-400'
+                          }`}>
                             SIRETs {index * 200 + 1} à {Math.min((index + 1) * 200, siretChunks.flat().length)}
                           </div>
                         </div>
@@ -725,24 +716,29 @@ export default function Home() {
                       
                       <div className="flex items-center gap-2">
                         {isProcessed && (
-                          <div className="text-sm text-green-600 font-medium">
+                          <div className="text-sm text-green-600 dark:text-green-400 font-medium">
                             ✓ Terminé ({chunkResults[index]?.length || 0} résultats)
                           </div>
                         )}
                         
-                        {!isProcessed && canProcess && (
+                        {!isProcessed && !isProcessing && !chunkProcessing.some(processing => processing) && (
                           <button
                             onClick={() => processChunk(index)}
-                            disabled={isProcessing}
                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                           >
-                            {isProcessing ? 'Traitement...' : 'Lancer le scan'}
+                            Lancer le scan
                           </button>
                         )}
                         
-                        {!canProcess && !isProcessed && (
-                          <div className="text-sm text-gray-500">
-                            En attente du chunk précédent
+                        {!isProcessed && !isProcessing && chunkProcessing.some(processing => processing) && (
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            Un autre chunk est en cours de traitement
+                          </div>
+                        )}
+                        
+                        {isProcessing && (
+                          <div className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg text-sm">
+                            Traitement...
                           </div>
                         )}
                       </div>
