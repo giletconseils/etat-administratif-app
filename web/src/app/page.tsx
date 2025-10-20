@@ -153,7 +153,11 @@ export default function Home() {
 
   // Fonction pour scinder les SIRETs en chunks optimisés pour la rapidité
   const createSiretChunks = (sirets: string[]): string[][] => {
-    const CHUNK_SIZE = 200; // Réduit à 200 pour éviter les timeouts HTTP/2
+    // Calcul basé sur les limites HTTP/2 et API INSEE :
+    // - 30 req/min INSEE = 1 req/2s
+    // - Stream API traite directement sans lots (plus simple)
+    // - 250 SIRETs × 2s = 500s = 8,3 minutes (optimal)
+    const CHUNK_SIZE = 250; // Optimisé pour HTTP/2 et limites API INSEE
     const chunks: string[][] = [];
     
     for (let i = 0; i < sirets.length; i += CHUNK_SIZE) {
@@ -244,15 +248,36 @@ export default function Home() {
       console.log('[DEBUG] All SIRETs to check:', allSirets.length, allSirets.slice(0, 5));
       
       if (allSirets.length > 0) {
-        // Scinder en chunks de 300 SIRETs
-        const chunks = createSiretChunks(allSirets);
-        setSiretChunks(chunks);
-        setCurrentChunkIndex(0);
-        setChunkResults(new Array(chunks.length).fill(null));
-        setChunkProcessing(new Array(chunks.length).fill(false));
-        
-        console.log(`📦 Base scindée en ${chunks.length} chunks de max 300 SIRETs`);
-        console.log(`📊 Chunks: ${chunks.map((chunk, i) => `Chunk ${i+1}: ${chunk.length} SIRETs`).join(', ')}`);
+        // Si moins de 250 SIRETs, lancer automatiquement le scan
+        if (allSirets.length <= 250) {
+          console.log(`🚀 Auto-lancement du scan pour ${allSirets.length} SIRETs (≤ 250)`);
+          const apiResults = await apiStreaming.streamApiResults(allSirets, []);
+          
+          const allResults = baseResults.map(baseItem => {
+            const apiItem = apiResults.find((api: Checked) => api.siret === baseItem.siret);
+            if (apiItem) {
+              return {
+                ...baseItem,
+                estRadiee: apiItem.estRadiee,
+                dateCessation: apiItem.dateCessation,
+                error: apiItem.error
+              };
+            }
+            return baseItem;
+          });
+          
+          setChecked(enrichWithAmounts(allResults, csvAmountMap));
+        } else {
+          // Scinder en chunks de 250 SIRETs (optimisé HTTP/2 + API INSEE)
+          const chunks = createSiretChunks(allSirets);
+          setSiretChunks(chunks);
+          setCurrentChunkIndex(0);
+          setChunkResults(new Array(chunks.length).fill(null));
+          setChunkProcessing(new Array(chunks.length).fill(false));
+          
+          console.log(`📦 Base scindée en ${chunks.length} chunks de max 250 SIRETs`);
+          console.log(`📊 Chunks: ${chunks.map((chunk, i) => `Chunk ${i+1}: ${chunk.length} SIRETs`).join(', ')}`);
+        }
       }
 
     } catch (error) {
@@ -360,26 +385,39 @@ export default function Home() {
         const allSirets = baseResults.map(item => item.siret).filter(Boolean);
         
         if (allSirets.length > 0) {
-          console.log('[DEBUG] PHONE DETECTION - About to call streamApiResults...');
-          const apiResults = await apiStreaming.streamApiResults(
-            allSirets,
-            baseResults.map(b => ({ siret: b.siret, phone: b.phone }))
-          );
-          
-          const allResults = baseResults.map(baseItem => {
-            const apiItem = apiResults.find((api: Checked) => api.siret === baseItem.siret);
-            if (apiItem) {
-              return {
-                ...baseItem,
-                estRadiee: apiItem.estRadiee,
-                dateCessation: apiItem.dateCessation,
-                error: apiItem.error
-              };
-            }
-            return baseItem;
-          });
-          
-          setChecked(enrichWithAmounts(allResults, csvAmountMap));
+          // Si moins de 250 SIRETs, lancer automatiquement le scan
+          if (allSirets.length <= 250) {
+            console.log(`🚀 Auto-lancement du scan pour ${allSirets.length} SIRETs (≤ 250) - Détection téléphone`);
+            const apiResults = await apiStreaming.streamApiResults(
+              allSirets,
+              baseResults.map(b => ({ siret: b.siret, phone: b.phone }))
+            );
+            
+            const allResults = baseResults.map(baseItem => {
+              const apiItem = apiResults.find((api: Checked) => api.siret === baseItem.siret);
+              if (apiItem) {
+                return {
+                  ...baseItem,
+                  estRadiee: apiItem.estRadiee,
+                  dateCessation: apiItem.dateCessation,
+                  error: apiItem.error
+                };
+              }
+              return baseItem;
+            });
+            
+            setChecked(enrichWithAmounts(allResults, csvAmountMap));
+          } else {
+            // Scinder en chunks de 250 SIRETs pour les gros datasets
+            const chunks = createSiretChunks(allSirets);
+            setSiretChunks(chunks);
+            setCurrentChunkIndex(0);
+            setChunkResults(new Array(chunks.length).fill(null));
+            setChunkProcessing(new Array(chunks.length).fill(false));
+            
+            console.log(`📦 Téléphones scindés en ${chunks.length} chunks de max 250 SIRETs`);
+            console.log(`📊 Chunks: ${chunks.map((chunk, i) => `Chunk ${i+1}: ${chunk.length} SIRETs`).join(', ')}`);
+          }
         }
       } else {
         const unmatchedSirets = joinResult.unmatched.map((item: { siret: string }) => item.siret).filter(Boolean);
@@ -407,26 +445,40 @@ export default function Home() {
           const allSirets = baseResults.map(item => item.siret).filter(Boolean);
           
           if (allSirets.length > 0) {
-            const apiResults = await apiStreaming.streamApiResults(
-              allSirets,
-              baseResults.map(b => ({ siret: b.siret, phone: b.phone }))
-            );
-            
-            const allResults = baseResults.map(baseItem => {
-              const apiItem = apiResults.find((api: Checked) => api.siret === baseItem.siret);
-              if (apiItem) {
-                return {
-                  ...baseItem,
-                  estRadiee: apiItem.estRadiee,
-                  dateCessation: apiItem.dateCessation,
-                  error: apiItem.error
-                };
-              }
-              return baseItem;
-            });
-            
-            const enrichedResults = enrichWithAmounts(allResults, csvAmountMap);
-            setChecked(enrichedResults);
+            // Si moins de 250 SIRETs, lancer automatiquement le scan
+            if (allSirets.length <= 250) {
+              console.log(`🚀 Auto-lancement du scan pour ${allSirets.length} SIRETs (≤ 250)`);
+              const apiResults = await apiStreaming.streamApiResults(
+                allSirets,
+                baseResults.map(b => ({ siret: b.siret, phone: b.phone }))
+              );
+              
+              const allResults = baseResults.map(baseItem => {
+                const apiItem = apiResults.find((api: Checked) => api.siret === baseItem.siret);
+                if (apiItem) {
+                  return {
+                    ...baseItem,
+                    estRadiee: apiItem.estRadiee,
+                    dateCessation: apiItem.dateCessation,
+                    error: apiItem.error
+                  };
+                }
+                return baseItem;
+              });
+              
+              const enrichedResults = enrichWithAmounts(allResults, csvAmountMap);
+              setChecked(enrichedResults);
+            } else {
+              // Scinder en chunks de 250 SIRETs pour les gros datasets
+              const chunks = createSiretChunks(allSirets);
+              setSiretChunks(chunks);
+              setCurrentChunkIndex(0);
+              setChunkResults(new Array(chunks.length).fill(null));
+              setChunkProcessing(new Array(chunks.length).fill(false));
+              
+              console.log(`📦 Fichier scindé en ${chunks.length} chunks de max 250 SIRETs`);
+              console.log(`📊 Chunks: ${chunks.map((chunk, i) => `Chunk ${i+1}: ${chunk.length} SIRETs`).join(', ')}`);
+            }
             
             // Enrichir avec les données BODACC (temporairement désactivé)
             // console.log('Starting BODACC enrichment...');
@@ -671,7 +723,7 @@ export default function Home() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-cursor-text-primary">Traitement par Chunks</h3>
               <div className="text-sm text-cursor-text-secondary">
-                {siretChunks.length} chunks de max 200 SIRETs (optimisé pour la rapidité)
+                {siretChunks.length} chunks de max 250 SIRETs (optimisé HTTP/2 + API INSEE)
               </div>
             </div>
             
@@ -709,7 +761,7 @@ export default function Home() {
                             isProcessed ? 'text-green-700 dark:text-green-300' :
                             'text-gray-600 dark:text-gray-400'
                           }`}>
-                            SIRETs {index * 200 + 1} à {Math.min((index + 1) * 200, siretChunks.flat().length)}
+                            SIRETs {index * 250 + 1} à {Math.min((index + 1) * 250, siretChunks.flat().length)}
                           </div>
                         </div>
                       </div>

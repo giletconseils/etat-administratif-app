@@ -58,12 +58,10 @@ export async function POST(req: NextRequest) {
           const MAX_CONSECUTIVE_ERRORS = 10; // Retour à la normale
           // MAX_EXECUTION_TIME supprimé - Railway = AUCUNE limite !
           
-          // ⚡ Paramètres optimaux pour les chunks
-          const BATCH_SIZE = 25; // Lots de 25 pour éviter les timeouts
-          const PAUSE_BETWEEN_BATCHES = 15000; // 15 secondes (optimisé)
+          // ⚡ Traitement direct sans lots (plus simple et plus rapide)
           const HEARTBEAT_INTERVAL = 30000; // Heartbeat toutes les 30s
           
-          console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
+          console.log(`🔄 Traitement direct de ${cleaned.length} SIRETs`);
 
           // Heartbeat pour maintenir la connexion HTTP/2
           heartbeatInterval = setInterval(() => {
@@ -74,38 +72,16 @@ export async function POST(req: NextRequest) {
             });
           }, HEARTBEAT_INTERVAL);
 
-          for (let batchStart = 0; batchStart < cleaned.length; batchStart += BATCH_SIZE) {
-            const batchEnd = Math.min(batchStart + BATCH_SIZE, cleaned.length);
-            const batchSirets = cleaned.slice(batchStart, batchEnd);
-            const batchNumber = Math.floor(batchStart / BATCH_SIZE) + 1;
-            const totalBatches = Math.ceil(cleaned.length / BATCH_SIZE);
-            
-            console.log(`📦 Lot ${batchNumber}/${totalBatches}: SIRETs ${batchStart + 1}-${batchEnd} (${batchSirets.length} SIRETs)`);
-            
-            // Pause entre les lots pour respecter les limites API INSEE
-            if (batchStart > 0) {
-              console.log(`⏸️ Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s - Lot ${batchNumber}/${totalBatches}`);
-              sendEvent({ 
-                type: 'progress', 
-                current: batchStart, 
-                total: cleaned.length, 
-                message: `⏸️ Pause de ${PAUSE_BETWEEN_BATCHES / 1000}s - Lot ${batchNumber}/${totalBatches}`,
-                siret: batchSirets[0]
-              });
-              await new Promise(resolve => setTimeout(resolve, PAUSE_BETWEEN_BATCHES));
-            }
-            
-            // Traiter le lot normalement (pas de limite de temps sur Railway !)
-            for (let i = 0; i < batchSirets.length; i++) {
-              const globalIndex = batchStart + i;
-              const siret = batchSirets[i];
+          // Traitement direct de tous les SIRETs
+          for (let i = 0; i < cleaned.length; i++) {
+            const siret = cleaned[i];
               
               // Send progress update
               sendEvent({ 
                 type: 'progress', 
-                current: globalIndex + 1, 
+                current: i + 1, 
                 total: cleaned.length, 
-                message: `Vérification du SIRET ${siret}... (${globalIndex + 1}/${cleaned.length}) - Lot ${batchNumber}/${totalBatches}`,
+                message: `Vérification du SIRET ${siret}... (${i + 1}/${cleaned.length})`,
                 siret: siret
               });
 
@@ -131,7 +107,7 @@ export async function POST(req: NextRequest) {
                     
                     sendEvent({ 
                       type: 'progress', 
-                      current: globalIndex + 1, 
+                      current: i + 1, 
                       total: cleaned.length, 
                       message: `Retry ${retryCount}/${MAX_RETRIES} pour SIRET ${siret}...`,
                       siret: siret
@@ -169,7 +145,7 @@ export async function POST(req: NextRequest) {
                 
                 // Gestion des erreurs INSEE
                 if (inseeResult.error) {
-                  console.warn(`⚠️  Erreur INSEE au SIRET ${globalIndex + 1}: ${inseeResult.error}`);
+                  console.warn(`⚠️  Erreur INSEE au SIRET ${i + 1}: ${inseeResult.error}`);
                   
                   // Ne compter que les erreurs critiques (pas les rate limits)
                   if (inseeResult.error.includes('NETWORK_ERROR') || inseeResult.error.includes('QUOTA_EXCEEDED')) {
@@ -197,12 +173,12 @@ export async function POST(req: NextRequest) {
                 sendEvent({ 
                   type: 'result', 
                   result: enrichedResult,
-                  current: globalIndex + 1,
+                  current: i + 1,
                   total: cleaned.length
                 });
 
               } catch (err) {
-                console.error(`❌ Exception au SIRET #${globalIndex + 1} (${siret}):`, err);
+                console.error(`❌ Exception au SIRET #${i + 1} (${siret}):`, err);
                 consecutiveErrors++;
                 
                 let errorMessage = 'UNKNOWN_ERROR';
@@ -224,7 +200,7 @@ export async function POST(req: NextRequest) {
                 sendEvent({ 
                   type: 'result', 
                   result: errorResult,
-                  current: globalIndex + 1,
+                  current: i + 1,
                   total: cleaned.length
                 });
                 
@@ -240,13 +216,10 @@ export async function POST(req: NextRequest) {
               }
 
               // Wait between requests (respecter la limite de 30 req/min = 2s par requête)
-              if (i < batchSirets.length - 1) {
+              if (i < cleaned.length - 1) {
                 await new Promise(resolve => setTimeout(resolve, INSEE_RATE_LIMITS.delayBetweenRequests));
               }
             }
-            
-            console.log(`✅ Lot ${batchNumber}/${totalBatches} terminé (${batchSirets.length} SIRETs traités)`);
-          }
 
           // Send completion
           sendEvent({ 
