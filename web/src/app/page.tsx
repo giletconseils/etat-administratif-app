@@ -26,6 +26,12 @@ export default function Home() {
   const [enabledStatuses, setEnabledStatuses] = useState<EnabledStatuses>(DEFAULT_ENABLED_STATUSES);
   const [loading, setLoading] = useState(false);
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
+  
+  // État pour le traitement par chunks
+  const [siretChunks, setSiretChunks] = useState<string[][]>([]);
+  const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
+  const [chunkResults, setChunkResults] = useState<Checked[][]>([]);
+  const [chunkProcessing, setChunkProcessing] = useState<boolean[]>([]);
 
   // Hooks personnalisés
   const fileProcessing = useFileProcessing();
@@ -56,9 +62,19 @@ export default function Home() {
 
   // Données filtrées et statistiques - radiées ou en procédure
   const filtered = useMemo(() => {
-    const sourceData = apiStreaming.streamingProgress 
-      ? enrichWithAmounts(apiStreaming.streamingResults, csvAmountMap)
-      : (checked ?? []);
+    let sourceData: Checked[] = [];
+    
+    // Utiliser les résultats des chunks si disponibles
+    if (chunkResults.some(result => result !== null)) {
+      sourceData = chunkResults
+        .filter(result => result !== null)
+        .flat()
+        .map(item => enrichWithAmounts([item], csvAmountMap)[0]);
+    } else if (apiStreaming.streamingProgress) {
+      sourceData = enrichWithAmounts(apiStreaming.streamingResults, csvAmountMap);
+    } else {
+      sourceData = checked ?? [];
+    }
     
     // Log pour BLANQUART spécifiquement
     const blanquartItem = sourceData.find(item => item.siret === '38076713700017');
@@ -70,13 +86,23 @@ export default function Home() {
     console.log('[DEBUG] Total filtered items:', filteredData.length);
     
     return filteredData;
-  }, [checked, apiStreaming.streamingResults, apiStreaming.streamingProgress, csvAmountMap]);
+  }, [checked, apiStreaming.streamingResults, apiStreaming.streamingProgress, chunkResults, csvAmountMap]);
 
   const stats = useMemo(() => {
-    const sourceData = apiStreaming.streamingProgress 
-      ? apiStreaming.streamingResults 
-      : (checked ?? []);
-    if (!sourceData.length && !apiStreaming.streamingProgress) return null;
+    let sourceData: Checked[] = [];
+    
+    // Utiliser les résultats des chunks si disponibles
+    if (chunkResults.some(result => result !== null)) {
+      sourceData = chunkResults
+        .filter(result => result !== null)
+        .flat();
+    } else if (apiStreaming.streamingProgress) {
+      sourceData = apiStreaming.streamingResults;
+    } else {
+      sourceData = checked ?? [];
+    }
+    
+    if (!sourceData.length && !apiStreaming.streamingProgress && !chunkResults.some(result => result !== null)) return null;
     
     const total = apiStreaming.streamingProgress ? apiStreaming.streamingProgress.total : sourceData.length;
     const radiees = sourceData.filter((r) => r.estRadiee).length;
@@ -92,15 +118,26 @@ export default function Home() {
       actives, 
       current: sourceData.length 
     };
-  }, [checked, apiStreaming.streamingResults, apiStreaming.streamingProgress]);
+  }, [checked, apiStreaming.streamingResults, apiStreaming.streamingProgress, chunkResults]);
 
   // Calcul du montant total
   const totalAmount = useMemo(() => {
-    const sourceData = apiStreaming.streamingProgress 
-      ? enrichWithAmounts(apiStreaming.streamingResults, csvAmountMap)
-      : (checked ?? []);
+    let sourceData: Checked[] = [];
+    
+    // Utiliser les résultats des chunks si disponibles
+    if (chunkResults.some(result => result !== null)) {
+      sourceData = chunkResults
+        .filter(result => result !== null)
+        .flat()
+        .map(item => enrichWithAmounts([item], csvAmountMap)[0]);
+    } else if (apiStreaming.streamingProgress) {
+      sourceData = enrichWithAmounts(apiStreaming.streamingResults, csvAmountMap);
+    } else {
+      sourceData = checked ?? [];
+    }
+    
     return calculateTotalAmount(sourceData);
-  }, [checked, apiStreaming.streamingResults, apiStreaming.streamingProgress, csvAmountMap]);
+  }, [checked, apiStreaming.streamingResults, apiStreaming.streamingProgress, chunkResults, csvAmountMap]);
 
   // Fonctions de traitement
   const resetProcess = () => {
@@ -108,11 +145,64 @@ export default function Home() {
     apiStreaming.reset();
     fileProcessing.reset();
     bodaccEnrichment.resetEnrichment();
+    setSiretChunks([]);
+    setCurrentChunkIndex(0);
+    setChunkResults([]);
+    setChunkProcessing([]);
+  };
+
+  // Fonction pour scinder les SIRETs en chunks optimisés pour la rapidité
+  const createSiretChunks = (sirets: string[]): string[][] => {
+    const CHUNK_SIZE = 200; // Réduit à 200 pour éviter les timeouts HTTP/2
+    const chunks: string[][] = [];
+    
+    for (let i = 0; i < sirets.length; i += CHUNK_SIZE) {
+      chunks.push(sirets.slice(i, i + CHUNK_SIZE));
+    }
+    
+    return chunks;
+  };
+
+  // Fonction pour traiter un chunk spécifique
+  const processChunk = async (chunkIndex: number) => {
+    if (chunkIndex >= siretChunks.length) return;
+    
+    setChunkProcessing(prev => {
+      const newState = [...prev];
+      newState[chunkIndex] = true;
+      return newState;
+    });
+    
+    try {
+      const chunkSirets = siretChunks[chunkIndex];
+      console.log(`🔄 Traitement du chunk ${chunkIndex + 1}/${siretChunks.length} (${chunkSirets.length} SIRETs)`);
+      
+      const results = await apiStreaming.streamApiResults(chunkSirets, []);
+      
+      setChunkResults(prev => {
+        const newResults = [...prev];
+        newResults[chunkIndex] = results;
+        return newResults;
+      });
+      
+      // Débloquer le chunk suivant
+      if (chunkIndex < siretChunks.length - 1) {
+        setCurrentChunkIndex(chunkIndex + 1);
+      }
+      
+    } catch (error) {
+      console.error(`Erreur lors du traitement du chunk ${chunkIndex + 1}:`, error);
+    } finally {
+      setChunkProcessing(prev => {
+        const newState = [...prev];
+        newState[chunkIndex] = false;
+        return newState;
+      });
+    }
   };
 
   const runBaseProcess = async () => {
     setLoading(true);
-    apiStreaming.startScan();
     setChecked(null);
     
     try {
@@ -138,7 +228,7 @@ export default function Home() {
       }
       
       // Afficher immédiatement les résultats de la jointure
-        const baseResults: Checked[] = joinResult.matched.map((item: SubcontractorData) => ({
+      const baseResults: Checked[] = joinResult.matched.map((item: SubcontractorData) => ({
         siret: (item.siret || item.Siret || item.SIRET || '').toString(),
         denomination: item.name || item.denomination || item.Denomination || 'N/A',
         estRadiee: false, // Temporairement actives, sera vérifié via API
@@ -156,54 +246,15 @@ export default function Home() {
       console.log('[DEBUG] All SIRETs to check:', allSirets.length, allSirets.slice(0, 5));
       
       if (allSirets.length > 0) {
-        console.log('[DEBUG] About to call streamApiResults...');
-        const apiResults = await apiStreaming.streamApiResults(
-          allSirets,
-          baseResults.map(b => ({ siret: b.siret, phone: b.phone }))
-        );
+        // Scinder en chunks de 300 SIRETs
+        const chunks = createSiretChunks(allSirets);
+        setSiretChunks(chunks);
+        setCurrentChunkIndex(0);
+        setChunkResults(new Array(chunks.length).fill(null));
+        setChunkProcessing(new Array(chunks.length).fill(false));
         
-        console.log('[DEBUG] API Results received:', apiResults);
-        console.log('[DEBUG] API Results for BLANQUART:', apiResults.find(r => r.siret === '38076713700017'));
-        
-        // Combiner les résultats avec les données de la base
-        const allResults = baseResults.map(baseItem => {
-          const apiItem = apiResults.find((api: Checked) => api.siret === baseItem.siret);
-          if (apiItem) {
-            const combined = {
-              ...baseItem,
-              estRadiee: apiItem.estRadiee,
-              dateCessation: apiItem.dateCessation,
-              error: apiItem.error,
-              // Copier les propriétés BODACC
-              procedure: apiItem.procedure,
-              procedureType: apiItem.procedureType,
-              hasActiveProcedures: apiItem.hasActiveProcedures,
-              bodaccError: apiItem.bodaccError
-            };
-            
-            // Log pour BLANQUART spécifiquement
-            if (baseItem.siret === '38076713700017') {
-              console.log('[DEBUG] BLANQUART - API Item:', apiItem);
-              console.log('[DEBUG] BLANQUART - Combined:', combined);
-            }
-            
-            return combined;
-          }
-          return baseItem;
-        });
-        
-        const enrichedResults = enrichWithAmounts(allResults, csvAmountMap);
-        setChecked(enrichedResults);
-        
-        // Enrichir avec les données BODACC (temporairement désactivé)
-        // console.log('Starting BODACC enrichment...');
-        // try {
-        //   const bodaccEnrichedResults = await bodaccEnrichment.enrichWithBodacc(enrichedResults);
-        //   setChecked(bodaccEnrichedResults);
-        // } catch (bodaccError) {
-        //   console.warn('BODACC enrichment failed, continuing with SIRENE data only:', bodaccError);
-        //   // Garder les résultats SIRENE même si BODACC échoue
-        // }
+        console.log(`📦 Base scindée en ${chunks.length} chunks de max 300 SIRETs`);
+        console.log(`📊 Chunks: ${chunks.map((chunk, i) => `Chunk ${i+1}: ${chunk.length} SIRETs`).join(', ')}`);
       }
 
     } catch (error) {
@@ -613,6 +664,93 @@ export default function Home() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Interface de traitement par chunks */}
+        {siretChunks.length > 0 && (
+          <div className="card-surface p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-cursor-text-primary">Traitement par Chunks</h3>
+              <div className="flex items-center gap-3">
+                <div className="text-sm text-cursor-text-secondary">
+                  {siretChunks.length} chunks de max 200 SIRETs (optimisé pour la rapidité)
+                </div>
+                <button
+                  onClick={() => {
+                    // Traiter tous les chunks automatiquement
+                    for (let i = 0; i < siretChunks.length; i++) {
+                      setTimeout(() => processChunk(i), i * 1000); // 1 seconde entre chaque chunk
+                    }
+                  }}
+                  disabled={chunkProcessing.some(processing => processing)}
+                  className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  🚀 Traiter tous les chunks
+                </button>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              {siretChunks.map((chunk, index) => {
+                const isProcessed = chunkResults[index] !== null;
+                const isProcessing = chunkProcessing[index];
+                const canProcess = index === 0 || chunkResults[index - 1] !== null;
+                const isCurrent = index === currentChunkIndex;
+                
+                return (
+                  <div key={index} className={`p-4 rounded-lg border ${
+                    isCurrent ? 'border-blue-500 bg-blue-50' : 
+                    isProcessed ? 'border-green-500 bg-green-50' : 
+                    canProcess ? 'border-gray-300 bg-gray-50' : 'border-gray-200 bg-gray-25'
+                  }`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                          isProcessed ? 'bg-green-500 text-white' :
+                          isProcessing ? 'bg-blue-500 text-white animate-pulse' :
+                          canProcess ? 'bg-gray-500 text-white' : 'bg-gray-300 text-gray-600'
+                        }`}>
+                          {isProcessed ? '✓' : index + 1}
+                        </div>
+                        <div>
+                          <div className="font-medium">
+                            Chunk {index + 1} - {chunk.length} SIRETs
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            SIRETs {index * 200 + 1} à {Math.min((index + 1) * 200, siretChunks.flat().length)}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {isProcessed && (
+                          <div className="text-sm text-green-600 font-medium">
+                            ✓ Terminé ({chunkResults[index]?.length || 0} résultats)
+                          </div>
+                        )}
+                        
+                        {!isProcessed && canProcess && (
+                          <button
+                            onClick={() => processChunk(index)}
+                            disabled={isProcessing}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                          >
+                            {isProcessing ? 'Traitement...' : 'Lancer le scan'}
+                          </button>
+                        )}
+                        
+                        {!canProcess && !isProcessed && (
+                          <div className="text-sm text-gray-500">
+                            En attente du chunk précédent
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
