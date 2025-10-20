@@ -14,13 +14,9 @@ export function useApiStreaming() {
     console.log('[DEBUG] streamApiResults called with sirets:', unmatchedSirets);
     if (unmatchedSirets.length === 0) return [];
 
-    const response = await fetch("/api/check-siret/websocket", {
+    const response = await fetch("/api/check-siret/stream", {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-        "Connection": "keep-alive"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
         sirets: unmatchedSirets,
         data

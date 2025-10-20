@@ -55,15 +55,13 @@ export async function POST(req: NextRequest) {
 
           const results: CompanyStatus[] = [];
           let consecutiveErrors = 0;
-          const MAX_CONSECUTIVE_ERRORS = 5; // Réduit pour détecter plus vite
-          let http2ErrorCount = 0;
-          const MAX_HTTP2_ERRORS = 3; // Arrêter après 3 erreurs HTTP/2
+          const MAX_CONSECUTIVE_ERRORS = 10; // Retour à la normale
           // MAX_EXECUTION_TIME supprimé - Railway = AUCUNE limite !
           
-          // ⚡ Optimisation avec HTTP/1.1 forcé
-          const BATCH_SIZE = 50; // Retour à la taille normale
-          const PAUSE_BETWEEN_BATCHES = 30000; // 30 secondes (retour à la normale)
-          const HEARTBEAT_INTERVAL = 60000; // Heartbeat toutes les 60s
+          // ⚡ Paramètres optimaux pour les chunks
+          const BATCH_SIZE = 25; // Lots de 25 pour éviter les timeouts
+          const PAUSE_BETWEEN_BATCHES = 15000; // 15 secondes (optimisé)
+          const HEARTBEAT_INTERVAL = 30000; // Heartbeat toutes les 30s
           
           console.log(`🔄 Traitement de ${cleaned.length} SIRETs par lots de ${BATCH_SIZE}`);
 
@@ -169,25 +167,9 @@ export async function POST(req: NextRequest) {
                   procedureType: bodaccInfo?.procedures?.[0]?.type
                 };
                 
-                // Gestion des erreurs INSEE avec détection HTTP/2
+                // Gestion des erreurs INSEE
                 if (inseeResult.error) {
                   console.warn(`⚠️  Erreur INSEE au SIRET ${globalIndex + 1}: ${inseeResult.error}`);
-                  
-                  // Détecter les erreurs HTTP/2
-                  if (inseeResult.error.includes('HTTP2_PROTOCOL_ERROR') || inseeResult.error.includes('ERR_HTTP2')) {
-                    http2ErrorCount++;
-                    console.error(`🔥 ERREUR HTTP/2 DÉTECTÉE #${http2ErrorCount}: ${inseeResult.error}`);
-                    
-                    if (http2ErrorCount >= MAX_HTTP2_ERRORS) {
-                      console.error(`❌ ${MAX_HTTP2_ERRORS} erreurs HTTP/2 détectées. Arrêt du traitement.`);
-                      sendEvent({ 
-                        type: 'error', 
-                        message: `Erreur HTTP/2 persistante après ${http2ErrorCount} tentatives. Le problème HTTP/2 n'est pas résolu.`,
-                        results: results
-                      });
-                      return; // Sortir de la fonction complète
-                    }
-                  }
                   
                   // Ne compter que les erreurs critiques (pas les rate limits)
                   if (inseeResult.error.includes('NETWORK_ERROR') || inseeResult.error.includes('QUOTA_EXCEEDED')) {
@@ -226,22 +208,6 @@ export async function POST(req: NextRequest) {
                 let errorMessage = 'UNKNOWN_ERROR';
                 if (err instanceof Error) {
                   errorMessage = (err as Error).message;
-                  
-                  // Détecter les erreurs HTTP/2 dans les exceptions
-                  if (errorMessage.includes('HTTP2_PROTOCOL_ERROR') || errorMessage.includes('ERR_HTTP2')) {
-                    http2ErrorCount++;
-                    console.error(`🔥 ERREUR HTTP/2 DÉTECTÉE dans l'exception #${http2ErrorCount}: ${errorMessage}`);
-                    
-                    if (http2ErrorCount >= MAX_HTTP2_ERRORS) {
-                      console.error(`❌ ${MAX_HTTP2_ERRORS} erreurs HTTP/2 détectées. Arrêt du traitement.`);
-                      sendEvent({ 
-                        type: 'error', 
-                        message: `Erreur HTTP/2 persistante après ${http2ErrorCount} tentatives. Le problème HTTP/2 n'est pas résolu.`,
-                        results: results
-                      });
-                      return; // Sortir de la fonction complète
-                    }
-                  }
                 } else if (typeof err === 'string') {
                   errorMessage = err as string;
                 }
