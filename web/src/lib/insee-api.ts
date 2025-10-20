@@ -1,3 +1,14 @@
+import { Agent } from 'https';
+
+// Pool de connexions HTTP/1.1 pour éviter HTTP/2
+const httpAgent = new Agent({
+  keepAlive: true,
+  maxSockets: 1,
+  maxFreeSockets: 1,
+  timeout: 60000,
+  maxTotalSockets: 1
+});
+
 // Types partagés pour l'API INSEE
 export type CompanyStatus = {
   siret: string;
@@ -48,10 +59,11 @@ export async function getInseeAccessToken(): Promise<string | null> {
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/x-www-form-urlencoded",
-        "Connection": "close", // Forcer HTTP/1.1
       },
       body: body.toString(),
       cache: "no-store",
+      // @ts-expect-error - Force HTTP/1.1 avec agent
+      agent: httpAgent,
     });
     
     if (!res.ok) {
@@ -91,9 +103,10 @@ export async function fetchWithIntegrationKey(siret: string, integrationKey: str
       headers: {
         "X-INSEE-Api-Key-Integration": integrationKey,
         Accept: "application/json",
-        "Connection": "close", // Forcer HTTP/1.1
       },
       cache: "no-store",
+      // @ts-expect-error - Force HTTP/1.1 avec agent
+      agent: httpAgent,
     });
     
     if (res.status === 404) {
