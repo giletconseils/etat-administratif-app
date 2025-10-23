@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import Papa from "papaparse";
 
 interface DatasetInfo {
   type: string;
@@ -154,11 +153,6 @@ export default function DataPage() {
 
   const getDatasetInfo = (type: string) => {
     return datasets.find((d) => d.type === type);
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "—";
-    return new Date(dateString).toLocaleString("fr-FR");
   };
 
   if (loading) {
@@ -417,10 +411,5 @@ function DatasetSection({
       </div>
     </div>
   );
-}
-
-function formatDate(dateString?: string) {
-  if (!dateString) return "—";
-  return new Date(dateString).toLocaleString("fr-FR");
 }
 

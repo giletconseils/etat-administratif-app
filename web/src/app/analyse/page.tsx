@@ -1165,7 +1165,7 @@ export default function AnalysePage() {
               <div>
                 <h2 className="text-xl font-bold text-cursor-text-primary">Traitement en cours</h2>
                 <p className="text-sm text-cursor-text-secondary">
-                  L'analyse des données est en cours, veuillez patienter...
+                  L&apos;analyse des données est en cours, veuillez patienter...
                 </p>
               </div>
             </div>
@@ -1196,7 +1196,7 @@ export default function AnalysePage() {
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-cursor-text-muted">Statuts analysés</span>
                           <span className="text-xs font-medium text-cursor-text-primary">
-                            {Object.entries(enabledStatuses).filter(([_, enabled]) => enabled).map(([status]) => status).join(', ') || 'Aucun'}
+                            {Object.entries(enabledStatuses).filter(([, enabled]) => enabled).map(([status]) => status).join(', ') || 'Aucun'}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -1260,7 +1260,7 @@ export default function AnalysePage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  <span>Arrêter l'analyse</span>
+                  <span>Arrêter l&apos;analyse</span>
                 </button>
               )}
             </div>
