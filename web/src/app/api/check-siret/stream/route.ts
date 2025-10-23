@@ -10,8 +10,12 @@ import { fetchBodaccProcedures } from "@/lib/bodacc-api";
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('[API] Stream route called');
     const { sirets, data }: SirenCheckInput = await req.json();
+    console.log('[API] Received sirets:', sirets?.length, 'data:', data?.length);
+    
     if (!Array.isArray(sirets) || sirets.length === 0) {
+      console.log('[API] Error: sirets_required');
       return NextResponse.json({ error: "sirets_required" }, { status: 400 });
     }
 
@@ -28,8 +32,10 @@ export async function POST(req: NextRequest) {
     const cleaned = cleanSirets(sirets);
 
     const integrationKey = process.env.INSEE_INTEGRATION_KEY;
+    console.log('[API] Integration key exists:', !!integrationKey);
     
     if (!integrationKey) {
+      console.log('[API] Error: NO_API_CONFIGURED');
       return NextResponse.json({ error: "NO_API_CONFIGURED" }, { status: 500 });
     }
 
@@ -264,7 +270,12 @@ export async function POST(req: NextRequest) {
 
   } catch (err) {
     console.error('Erreur dans la route stream:', err);
-    return NextResponse.json({ error: "invalid_request" }, { status: 400 });
+    console.error('Stack trace:', err instanceof Error ? err.stack : 'No stack trace');
+    return NextResponse.json({ 
+      error: "invalid_request", 
+      details: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined
+    }, { status: 400 });
   }
 }
 

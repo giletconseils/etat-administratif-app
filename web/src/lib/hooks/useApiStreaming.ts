@@ -26,7 +26,9 @@ export function useApiStreaming() {
     console.log('[DEBUG] Stream response status:', response.status);
 
     if (!response.ok) {
-      throw new Error('Erreur lors du streaming des résultats');
+      const errorText = await response.text();
+      console.error('[DEBUG] API Error response:', errorText);
+      throw new Error(`Erreur API: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const reader = response.body?.getReader();
