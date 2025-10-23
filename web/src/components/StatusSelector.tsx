@@ -1,4 +1,5 @@
 import { EnabledStatuses, DEFAULT_ENABLED_STATUSES } from '@/lib/types';
+import { useState, useEffect } from 'react';
 
 interface StatusSelectorProps {
   enabledStatuses: EnabledStatuses;
@@ -6,6 +7,23 @@ interface StatusSelectorProps {
 }
 
 export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelectorProps) {
+  const [lastModified, setLastModified] = useState<string>('...');
+
+  useEffect(() => {
+    // Récupérer la date de dernière modification du CSV
+    fetch('/api/csv-last-modified')
+      .then(res => res.json())
+      .then(data => {
+        if (data.lastModified) {
+          setLastModified(data.lastModified);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching CSV last modified date:', error);
+        setLastModified('--/--/----');
+      });
+  }, []);
+
   const selectAll = () => {
     onStatusChange(DEFAULT_ENABLED_STATUSES);
   };
@@ -42,7 +60,7 @@ export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelect
             <div className="flex items-center gap-2">
               <h3 className="text-base font-medium text-cursor-text-primary">Ensembles de sous-traitants</h3>
               <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
-                Mis à jour le 22/10/2024
+                Mis à jour le {lastModified}
               </span>
             </div>
             <p className="text-sm text-cursor-text-secondary">Sélectionnez les bases à analyser</p>

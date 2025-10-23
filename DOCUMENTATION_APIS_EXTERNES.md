@@ -425,5 +425,5 @@ console.error(`[ERROR] API: ${api}, Error: ${error.message}, Retry: ${attempt}/$
 ---
 
 **Version** : 1.0  
-**Date** : Décembre 2024  
+**Date** : Octobre 2025
 **Auteur** : Équipe Développement
