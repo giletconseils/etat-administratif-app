@@ -164,14 +164,14 @@ export default function HomePage() {
             <svg className="w-4 h-4 text-cursor-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            <span className="text-sm font-medium text-cursor-accent-blue">Hub d'Analyse & Automatisation</span>
+            <span className="text-sm font-medium text-cursor-accent-blue">Hub d&apos;Analyse & Automatisation</span>
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold text-cursor-text-primary mb-4 tracking-tight">
-            Hub d'Analyse & Automatisation
+            Hub d&apos;Analyse & Automatisation
           </h1>
           <p className="text-lg text-cursor-text-secondary max-w-2xl mx-auto">
-            Détection d'anomalies, enrichissement de données et agents intelligents
+            Détection d&apos;anomalies, enrichissement de données et agents intelligents
           </p>
         </div>
 
@@ -256,7 +256,7 @@ export default function HomePage() {
                             {/* Arrow indicator */}
                             {!isDisabled && (
                               <div className="mt-4 flex items-center gap-2 text-sm font-medium text-cursor-accent-button group-hover:gap-3 transition-all">
-                                <span>Commencer l'analyse</span>
+                                <span>Commencer l&apos;analyse</span>
                                 <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>

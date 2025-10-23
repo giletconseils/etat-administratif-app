@@ -245,7 +245,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
             Analyse des déclarations RI
           </h2>
           <p className="text-sm text-cursor-text-secondary">
-            Réparations à l'Identique - Comparaison théorique vs réel ({results.length} entreprise{results.length > 1 ? 's' : ''})
+            Réparations à l&apos;Identique - Comparaison théorique vs réel ({results.length} entreprise{results.length > 1 ? &apos;s&apos; : &apos;&apos;})
           </p>
         </div>
       </div>

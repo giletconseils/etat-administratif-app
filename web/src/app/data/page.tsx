@@ -224,7 +224,7 @@ export default function DataPage() {
               Assureurs et % RI
             </h2>
             <p className="text-sm text-cursor-text-secondary">
-              Pourcentages de chance qu'une mission DU engendre une RI par assureur
+              Pourcentages de chance qu&apos;une mission DU engendre une RI par assureur
             </p>
           </div>
 

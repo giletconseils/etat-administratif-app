@@ -22,7 +22,6 @@ import { StatusSelector } from "@/components/StatusSelector";
 import { FileUploader } from "@/components/FileUploader";
 import { ResultsTable } from "@/components/ResultsTable";
 import { SiretSearchBar } from "@/components/SiretSearchBar";
-import { TreatmentSelector } from "@/components/TreatmentSelector";
 import { RIAnomalyResults } from "@/components/RIAnomalyResults";
 import { RIAnomalyBatchResults } from "@/components/RIAnomalyBatchResults";
 import { RIAnomalyResult, RIThresholds, DEFAULT_RI_THRESHOLDS } from "@/lib/treatments/ri-anomalies/types";
@@ -36,7 +35,7 @@ export default function AnalysePage() {
   
   // État du wizard
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
-  const [selectedTreatments, setSelectedTreatments] = useState<TreatmentType[]>(
+  const [selectedTreatments] = useState<TreatmentType[]>(
     treatmentParam ? [treatmentParam] : ['radiation-check']
   );
   const [currentTab, setCurrentTab] = useState<string>('search');
@@ -57,7 +56,6 @@ export default function AnalysePage() {
   
   // État pour le traitement par chunks
   const [siretChunks, setSiretChunks] = useState<string[][]>([]);
-  const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
   const [chunkResults, setChunkResults] = useState<Checked[][]>([]);
   const [chunkProcessing, setChunkProcessing] = useState<boolean[]>([]);
 
@@ -233,7 +231,6 @@ export default function AnalysePage() {
     fileProcessing.reset();
     bodaccEnrichment.resetEnrichment();
     setSiretChunks([]);
-    setCurrentChunkIndex(0);
     setChunkResults([]);
     setChunkProcessing([]);
     setManualSirets([]);
@@ -241,27 +238,9 @@ export default function AnalysePage() {
   };
 
   // Navigation du wizard
-  const canGoToStep2 = () => {
-    // Vérifier qu'au moins une source de données est sélectionnée
-    return manualSirets.length > 0 || fileProcessing.rows.length > 0 || true; // 'true' pour la base sous-traitants
-  };
-
-  const goToNextStep = () => {
-    if (currentStep === 1 && canGoToStep2()) {
-      setCurrentStep(2);
-    }
-  };
-
-  const goToPreviousStep = () => {
-    if (currentStep === 3) {
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      setCurrentStep(1);
-    }
-  };
-
   const canRunAnalysis = () => {
-    return selectedTreatments.length > 0 && canGoToStep2();
+    // Vérifier qu'au moins un traitement et une source de données sont sélectionnés
+    return selectedTreatments.length > 0 && (manualSirets.length > 0 || fileProcessing.rows.length > 0 || true);
   };
 
   // Fonction pour scinder les SIRETs en chunks optimisés pour la rapidité
@@ -302,8 +281,7 @@ export default function AnalysePage() {
         return newResults;
       });
       
-      // Marquer ce chunk comme traité et mettre à jour l'index courant
-      setCurrentChunkIndex(chunkIndex);
+              // Chunk traité avec succès
       
     } catch (error) {
       console.error(`Erreur lors du traitement du chunk ${chunkIndex + 1}:`, error);
@@ -389,7 +367,6 @@ export default function AnalysePage() {
           console.log(`📦 CRÉATION DES CHUNKS : ${allSirets.length} SIRETs > 250`);
           const chunks = createSiretChunks(allSirets);
           setSiretChunks(chunks);
-          setCurrentChunkIndex(0);
           setChunkResults(new Array(chunks.length).fill(null));
           setChunkProcessing(new Array(chunks.length).fill(false));
           
@@ -652,7 +629,6 @@ export default function AnalysePage() {
             // Scinder en chunks de 250 SIRETs pour les gros datasets
             const chunks = createSiretChunks(allSirets);
             setSiretChunks(chunks);
-            setCurrentChunkIndex(0);
             setChunkResults(new Array(chunks.length).fill(null));
             setChunkProcessing(new Array(chunks.length).fill(false));
             
@@ -713,7 +689,6 @@ export default function AnalysePage() {
               // Scinder en chunks de 250 SIRETs pour les gros datasets
               const chunks = createSiretChunks(allSirets);
               setSiretChunks(chunks);
-              setCurrentChunkIndex(0);
               setChunkResults(new Array(chunks.length).fill(null));
               setChunkProcessing(new Array(chunks.length).fill(false));
               
@@ -944,7 +919,7 @@ export default function AnalysePage() {
                         <div>
                           <p className="text-xs font-medium text-cursor-accent-red mb-1">Statuts U3 et U4 exclus</p>
                           <p className="text-xs text-cursor-text-muted">
-                            Les sous-traitants avec les statuts U3 et U4 ne sont pas inclus dans l'analyse de détection des anomalies RI.
+                            Les sous-traitants avec les statuts U3 et U4 ne sont pas inclus dans l&apos;analyse de détection des anomalies RI.
                           </p>
                         </div>
                       </div>
@@ -1344,7 +1319,7 @@ export default function AnalysePage() {
         {/* Interface de traitement par chunks - visible à l'étape 2 et 3 */}
         {(currentStep === 2 || currentStep === 3) && siretChunks.length > 0 && (
           <div className="card-surface p-5 mb-6">
-            <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1369,7 +1344,7 @@ export default function AnalysePage() {
               {siretChunks.map((chunk, index) => {
                 const isProcessed = chunkResults[index] !== null;
                 const isProcessing = chunkProcessing[index];
-                const canProcess = !isProcessed && !isProcessing && !chunkProcessing.some(processing => processing);
+                const canProcess = !isProcessed && !isProcessing && !chunkProcessing.some(p => p);
                 
                 return (
                   <button
