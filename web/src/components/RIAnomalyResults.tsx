@@ -158,19 +158,19 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-cursor-border-primary">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-cursor-text-primary">
+                    <th className="text-left py-4 px-6 text-sm font-semibold text-cursor-text-primary">
                       Assureur
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-cursor-text-primary">
+                    <th className="text-right py-4 px-6 text-sm font-semibold text-cursor-text-primary">
                       Missions reçues
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-cursor-text-primary">
+                    <th className="text-right py-4 px-6 text-sm font-semibold text-cursor-text-primary">
                       RI théorique
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-cursor-text-primary">
+                    <th className="text-right py-4 px-6 text-sm font-semibold text-cursor-text-primary">
                       RI déclaré
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-cursor-text-primary">
+                    <th className="text-right py-4 px-6 text-sm font-semibold text-cursor-text-primary">
                       Écart %
                     </th>
                   </tr>
@@ -183,23 +183,23 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
                         index % 2 === 0 ? "bg-cursor-bg-tertiary" : ""
                       }`}
                     >
-                      <td className="py-3 px-4 text-sm text-cursor-text-primary font-medium">
+                      <td className="py-4 px-6 text-sm text-cursor-text-primary font-medium">
                         <div>{detail.assureurName}</div>
                         <div className="text-xs text-cursor-text-muted">
                           ID: {detail.assureurId}
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-sm text-right text-cursor-text-primary tabular-nums">
+                      <td className="py-4 px-6 text-sm text-right text-cursor-text-primary tabular-nums">
                         {detail.missionsDU}
                       </td>
-                      <td className="py-3 px-4 text-sm text-right text-cursor-text-secondary tabular-nums">
+                      <td className="py-4 px-6 text-sm text-right text-cursor-text-secondary tabular-nums">
                         {formatNumber(detail.riTheorique)}
                       </td>
-                      <td className="py-3 px-4 text-sm text-right text-cursor-text-primary tabular-nums">
+                      <td className="py-4 px-6 text-sm text-right text-cursor-text-primary tabular-nums">
                         {detail.riReel}
                       </td>
                       <td
-                        className={`py-3 px-4 text-sm text-right font-medium tabular-nums ${
+                        className={`py-4 px-6 text-sm text-right font-medium tabular-nums ${
                           detail.ecartPercent < thresholds.warningThreshold
                             ? "text-red-400"
                             : detail.ecartPercent > thresholds.excellentThreshold

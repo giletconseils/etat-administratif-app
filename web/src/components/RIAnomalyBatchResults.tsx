@@ -308,19 +308,19 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                               <table className="w-full border border-cursor-border-primary rounded-lg overflow-hidden">
                                 <thead className="bg-cursor-bg-tertiary">
                                   <tr>
-                                    <th className="px-3 py-2 text-left text-xs font-semibold text-cursor-text-secondary">
+                                    <th className="px-6 py-3 text-left text-sm font-semibold text-cursor-text-secondary">
                                       Assureur
                                     </th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-cursor-text-secondary">
+                                    <th className="px-6 py-3 text-right text-sm font-semibold text-cursor-text-secondary">
                                       Missions reçues
                                     </th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-cursor-text-secondary">
+                                    <th className="px-6 py-3 text-right text-sm font-semibold text-cursor-text-secondary">
                                       RI théorique
                                     </th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-cursor-text-secondary">
+                                    <th className="px-6 py-3 text-right text-sm font-semibold text-cursor-text-secondary">
                                       RI déclaré
                                     </th>
-                                    <th className="px-3 py-2 text-right text-xs font-semibold text-cursor-text-secondary">
+                                    <th className="px-6 py-3 text-right text-sm font-semibold text-cursor-text-secondary">
                                       Écart %
                                     </th>
                                   </tr>
@@ -333,21 +333,21 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                                         index % 2 === 0 ? 'bg-cursor-bg-primary' : 'bg-cursor-bg-secondary'
                                       } border-t border-cursor-border-primary`}
                                     >
-                                      <td className="px-3 py-2 text-xs text-cursor-text-primary">
+                                      <td className="px-6 py-3 text-sm text-cursor-text-primary">
                                         <div className="font-medium">{detail.assureurName}</div>
-                                        <div className="text-cursor-text-muted">ID: {detail.assureurId}</div>
+                                        <div className="text-cursor-text-muted text-xs">ID: {detail.assureurId}</div>
                                       </td>
-                                      <td className="px-3 py-2 text-xs text-right text-cursor-text-primary tabular-nums">
+                                      <td className="px-6 py-3 text-sm text-right text-cursor-text-primary tabular-nums">
                                         {detail.missionsDU}
                                       </td>
-                                      <td className="px-3 py-2 text-xs text-right text-cursor-text-secondary tabular-nums">
+                                      <td className="px-6 py-3 text-sm text-right text-cursor-text-secondary tabular-nums">
                                         {formatNumber(detail.riTheorique)}
                                       </td>
-                                      <td className="px-3 py-2 text-xs text-right text-cursor-text-primary tabular-nums">
+                                      <td className="px-6 py-3 text-sm text-right text-cursor-text-primary tabular-nums">
                                         {detail.riReel}
                                       </td>
                                       <td
-                                        className={`px-3 py-2 text-xs text-right font-medium tabular-nums ${
+                                        className={`px-6 py-3 text-sm text-right font-medium tabular-nums ${
                                           detail.ecartPercent < thresholds.warningThreshold
                                             ? 'text-red-400'
                                             : detail.ecartPercent > thresholds.excellentThreshold
