@@ -39,7 +39,12 @@ export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelect
             </svg>
           </div>
           <div>
-            <h3 className="text-base font-medium text-cursor-text-primary">Ensembles de sous-traitants</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-medium text-cursor-text-primary">Ensembles de sous-traitants</h3>
+              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+                Mis à jour le 22/10/2024
+              </span>
+            </div>
             <p className="text-sm text-cursor-text-secondary">Sélectionnez les bases à analyser</p>
           </div>
         </div>

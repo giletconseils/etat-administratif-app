@@ -630,23 +630,23 @@ export default function Home() {
         </div>
         {/* CURSOR-style main interface - single card like CURSOR */}
         <div className="card-surface p-6 mb-6">
-          <Tabs defaultValue="base">
+          <Tabs defaultValue="search">
             <TabsList>
-              <TabsTrigger value="base">Ensemble de sous-traitants</TabsTrigger>
               <TabsTrigger value="search">Recherche SIRET/SIREN</TabsTrigger>
+              <TabsTrigger value="base">Ensemble de sous-traitants</TabsTrigger>
               <TabsTrigger value="csv">Fichier CSV</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="search">
+              <SiretSearchBar
+                onSiretsChange={setManualSirets}
+              />
+            </TabsContent>
 
             <TabsContent value="base">
               <StatusSelector 
                 enabledStatuses={enabledStatuses}
                 onStatusChange={setEnabledStatuses}
-              />
-            </TabsContent>
-
-            <TabsContent value="search">
-              <SiretSearchBar
-                onSiretsChange={setManualSirets}
               />
             </TabsContent>
 
