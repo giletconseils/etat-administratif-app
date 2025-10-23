@@ -215,7 +215,17 @@ export async function execute(
     siretArray.map((siret) => executeSingle(siret, missions, assureursMap, thresholds))
   );
 
-  return results;
+  // Sort results by ecartPercent (ascending), then by totalMissionsDU (descending) for equal ecart
+  const sortedResults = results.sort((a, b) => {
+    const ecartDiff = a.ecartPercent - b.ecartPercent;
+    if (ecartDiff !== 0) {
+      return ecartDiff; // Tri principal par écart
+    }
+    // En cas d'égalité d'écart, trier par nombre de missions décroissant
+    return b.totalMissionsDU - a.totalMissionsDU;
+  });
+
+  return sortedResults;
 }
 
 /**
@@ -316,7 +326,15 @@ export async function executeAll(
     );
 
     // 9. Trier par ecartPercent croissant (plus négatif d'abord = sous-déclaration)
-    const sortedResults = results.sort((a, b) => a.ecartPercent - b.ecartPercent);
+    //    En cas d'égalité, trier par nombre de missions décroissant (plus de missions = plus d'argent en jeu)
+    const sortedResults = results.sort((a, b) => {
+      const ecartDiff = a.ecartPercent - b.ecartPercent;
+      if (ecartDiff !== 0) {
+        return ecartDiff; // Tri principal par écart
+      }
+      // En cas d'égalité d'écart, trier par nombre de missions décroissant
+      return b.totalMissionsDU - a.totalMissionsDU;
+    });
 
     // 10. Ajouter le ranking
     const rankedResults = sortedResults.map((result, index) => ({
