@@ -8,11 +8,18 @@
 
 ## 🔧 Architecture API
 
+### **URL de base**
+```
+Production : https://etat-administratif-app.railway.app
+Staging    : https://staging-etat-administratif-app.railway.app
+Local      : http://localhost:3000
+```
+
 ### **Endpoints disponibles**
 
 #### 1. **API de vérification par SIRET**
 ```
-POST /api/check-siret/stream
+POST https://etat-administratif-app.railway.app/api/check-siret/stream
 ```
 
 **Payload :**
@@ -35,7 +42,7 @@ POST /api/check-siret/stream
 
 #### 2. **API de jointure avec base sous-traitants**
 ```
-POST /api/join/simple-join
+POST https://etat-administratif-app.railway.app/api/join/simple-join
 ```
 
 **Payload :**
@@ -56,7 +63,7 @@ POST /api/join/simple-join
 
 #### 3. **API de jointure par téléphone**
 ```
-POST /api/join/phone-join
+POST https://etat-administratif-app.railway.app/api/join/phone-join
 ```
 
 **Payload :**
@@ -70,6 +77,47 @@ POST /api/join/phone-join
     "U1": true,
     "U1P": false,
     "TR": true
+  }
+}
+```
+
+#### 4. **API d'enrichissement BODACC**
+```
+POST https://etat-administratif-app.railway.app/api/enrich-bodacc
+```
+
+**Payload :**
+```json
+{
+  "results": [
+    {
+      "siret": "38076713700017",
+      "denomination": "ENTREPRISE TEST",
+      "estRadiee": false
+    }
+  ]
+}
+```
+
+**Réponse :**
+```json
+{
+  "success": true,
+  "enrichedResults": [
+    {
+      "siret": "38076713700017",
+      "denomination": "ENTREPRISE TEST",
+      "estRadiee": false,
+      "hasActiveProcedures": true,
+      "procedure": "Sauvegarde",
+      "procedureType": "Procédure de sauvegarde"
+    }
+  ],
+  "stats": {
+    "total": 1,
+    "withProcedures": 1,
+    "withActiveProcedures": 1,
+    "errors": 0
   }
 }
 ```
@@ -120,13 +168,21 @@ interface ProcessingStats {
 - **Authentification** : Clé d'intégration requise
 - **Timeout** : 60 secondes par requête
 
-### **2. Gestion des volumes**
+### **2. Limites API BODACC**
+- **Taux** : 100 requêtes/minute maximum
+- **Délai** : 600ms entre chaque requête
+- **Authentification** : Clé API BODACC requise
+- **Timeout** : 30 secondes par requête
+- **Données** : Historique des 3 dernières années
+- **Types de procédures** : Sauvegarde, Redressement, Liquidation
+
+### **3. Gestion des volumes**
 - **Petits volumes** (≤ 250 SIRETs) : Traitement automatique
 - **Gros volumes** (> 250 SIRETs) : Découpage en chunks de 250
 - **Streaming** : Résultats en temps réel via SSE
 - **Heartbeat** : Toutes les 30 secondes pour maintenir la connexion
 
-### **3. Gestion d'erreurs**
+### **4. Gestion d'erreurs**
 - **Retry automatique** : 3 tentatives avec backoff exponentiel
 - **Erreurs consécutives** : Arrêt après 10 erreurs consécutives
 - **Types d'erreurs** :
@@ -134,6 +190,7 @@ interface ProcessingStats {
   - `QUOTA_EXCEEDED` : Limite API dépassée
   - `INVALID_SIRET` : SIRET invalide
   - `API_ERROR` : Erreur API INSEE
+  - `BODACC_ERROR` : Erreur API BODACC
 
 ---
 
@@ -148,8 +205,9 @@ INSEE_INTEGRATION_KEY=your-integration-key
 # Base de données (optionnel pour enrichissement)
 DATABASE_URL=postgresql://...
 
-# BODACC API (optionnel)
+# BODACC API (optionnel mais recommandé)
 BODACC_API_KEY=your-bodacc-key
+BODACC_API_URL=https://api.bodacc.fr
 ```
 
 ### **Dépendances système**
@@ -336,6 +394,15 @@ const results = await checkSirets(sirets);
 console.log(results); // [{ siret: '38076713700017', estRadiee: false, ... }]
 ```
 
+### **Exemple 1bis : Appel direct API**
+```javascript
+const response = await fetch('https://etat-administratif-app.railway.app/api/check-siret/stream', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ sirets: ['38076713700017'] })
+});
+```
+
 ### **Exemple 2 : Vérification en lot**
 ```javascript
 const sirets = ['38076713700017', '12345678901234', ...]; // 1000 SIRETs
@@ -349,6 +416,18 @@ const subcontractors = await getSubcontractorsFromDB();
 const sirets = subcontractors.map(s => s.siret);
 const results = await checkSirets(sirets);
 await updateSubcontractorStatus(results);
+```
+
+### **Exemple 4 : Enrichissement BODACC**
+```javascript
+// 1. Vérification INSEE
+const inseeResults = await checkSirets(['38076713700017']);
+
+// 2. Enrichissement BODACC
+const bodaccResults = await enrichBodacc(inseeResults);
+
+// 3. Résultats complets
+console.log(bodaccResults); // [{ siret: '38076713700017', hasActiveProcedures: true, procedure: 'Sauvegarde' }]
 ```
 
 ---
