@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Papa from "papaparse";
 import * as XLSX from 'xlsx';
@@ -28,7 +28,7 @@ import { RIAnomalyResult, RIThresholds, DEFAULT_RI_THRESHOLDS } from "@/lib/trea
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import { Stepper, Step } from "@/components/ui/Stepper";
 
-export default function AnalysePage() {
+function AnalysePageContent() {
   // Récupération du traitement depuis l'URL
   const searchParams = useSearchParams();
   const treatmentParam = searchParams.get('treatment') as TreatmentType | null;
@@ -1399,5 +1399,20 @@ export default function AnalysePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AnalysePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-cursor-bg-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-cursor-text-secondary">Chargement de l&apos;analyse...</p>
+        </div>
+      </div>
+    }>
+      <AnalysePageContent />
+    </Suspense>
   );
 }
