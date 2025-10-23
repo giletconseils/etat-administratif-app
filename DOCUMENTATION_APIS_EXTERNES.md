@@ -280,9 +280,9 @@ curl -X GET "https://api.bodacc.fr/api/v1/procedures?siren=380767137" \
 - **Burst** : 10 requêtes simultanées max
 
 #### **Quotas**
-- **Gratuit** : 100 requêtes/jour
-- **Payant** : Selon abonnement
-- **Reset** : Quotidien à minuit
+- **Gratuit** : Pas de quota quotidien
+- **Limite** : Rate limiting uniquement (100 req/min)
+- **Abonnement** : Selon besoins
 
 #### **Timeouts**
 - **Connexion** : 15 secondes
@@ -299,10 +299,10 @@ curl -X GET "https://api.bodacc.fr/api/v1/procedures?siren=380767137" \
   "message": "Invalid API key"
 }
 
-// 403 - Quota dépassé
+// 403 - Accès refusé
 {
-  "error": "quota_exceeded",
-  "message": "Daily quota exceeded"
+  "error": "forbidden",
+  "message": "Access denied"
 }
 
 // 404 - SIREN non trouvé
@@ -396,7 +396,7 @@ async function checkCompanyWithRetry(siret, maxRetries = 3) {
 - **Taux de succès** : % de requêtes réussies
 - **Temps de réponse** : Latence moyenne
 - **Erreurs** : Nombre et types d'erreurs
-- **Quotas** : Utilisation des quotas quotidiens
+- **Rate limiting** : Respect des limites par minute
 
 #### **Logs recommandés**
 ```javascript
