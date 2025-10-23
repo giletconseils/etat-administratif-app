@@ -162,7 +162,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
         </div>
 
         {/* Statistiques en une seule card */}
-        <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20 space-y-3">
+        <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/10 space-y-3">
           {/* Anomalies détectées */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-cursor-text-secondary">Anomalies RI</span>
@@ -223,15 +223,15 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
           <table className="w-full">
             <thead className="bg-cursor-bg-tertiary border-b border-cursor-border-primary">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">Rang</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">SIRET</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">Dénomination</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">Missions</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">RI Théo.</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">RI Réel</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">Écart %</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">Statut</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-cursor-text-secondary uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">Rang</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">SIRET</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">Dénomination</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">Missions</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">RI Théo.</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">RI Réel</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">Écart %</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">Statut</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-cursor-border-primary">
@@ -245,33 +245,33 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                       className={`transition-colors ${hasDetails ? 'cursor-pointer hover:bg-cursor-bg-tertiary/50' : ''}`}
                       onClick={() => hasDetails && toggleExpanded(result.siret)}
                     >
-                      <td className="px-4 py-3 text-sm font-medium text-cursor-text-primary tabular-nums">
+                      <td className="px-6 py-4 text-sm font-medium text-cursor-text-primary tabular-nums">
                         #{result.ranking}
                       </td>
-                      <td className="px-4 py-3 text-sm font-mono text-cursor-text-primary">
+                      <td className="px-6 py-4 text-sm font-mono text-cursor-text-primary">
                         {result.siret}
                       </td>
-                      <td className="px-4 py-3 text-sm text-cursor-text-primary">
+                      <td className="px-6 py-4 text-sm text-cursor-text-primary">
                         {result.denomination}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-cursor-text-primary tabular-nums">
+                      <td className="px-6 py-4 text-sm text-right text-cursor-text-primary tabular-nums">
                         {result.totalMissionsDU}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-cursor-text-secondary tabular-nums">
+                      <td className="px-6 py-4 text-sm text-right text-cursor-text-secondary tabular-nums">
                         {result.riTheorique.toFixed(1)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-cursor-text-primary tabular-nums">
+                      <td className="px-6 py-4 text-sm text-right text-cursor-text-primary tabular-nums">
                         {result.riReel}
                       </td>
-                      <td className={`px-4 py-3 text-sm text-right tabular-nums ${getEcartColor(result.ecartPercent)}`}>
+                      <td className={`px-6 py-4 text-sm text-right tabular-nums ${getEcartColor(result.ecartPercent)}`}>
                         {result.ecartPercent >= 0 ? '+' : ''}{result.ecartPercent.toFixed(1)}%
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-6 py-4 text-sm">
                         {getStatusBadge(result.status)}
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-6 py-4 text-center">
                         {hasDetails && (
-                          <div className="inline-flex items-center gap-1 px-2 py-1 text-xs text-cursor-text-primary">
+                          <div className="inline-flex items-center gap-1 px-3 py-1 text-sm text-cursor-text-primary">
                             <svg
                               className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
                               fill="none"
@@ -294,7 +294,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                     {/* Ligne expandée pour afficher les détails par assureur */}
                     {isExpanded && hasDetails && (
                       <tr className="bg-cursor-bg-secondary/50">
-                        <td colSpan={9} className="px-4 py-4">
+                        <td colSpan={9} className="px-6 py-6">
                           <div className="ml-8">
                             <div className="flex items-center gap-2 mb-3">
                               <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
