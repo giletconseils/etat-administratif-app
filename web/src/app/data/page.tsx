@@ -155,6 +155,11 @@ export default function DataPage() {
     return datasets.find((d) => d.type === type);
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "—";
+    return new Date(dateString).toLocaleString("fr-FR");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-cursor-bg-primary flex items-center justify-center">
