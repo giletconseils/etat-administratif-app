@@ -128,9 +128,10 @@ curl -X GET "https://api.insee.fr/api-sirene/3.11/siret/38076713700017" \
 - **Burst** : Pas de burst autorisé
 
 #### **Quotas**
-- **Gratuit** : 1000 requêtes/jour
+- **Gratuit** : Plusieurs milliers de requêtes/jour
 - **Payant** : Selon abonnement
 - **Reset** : Quotidien à minuit
+- **Limite par requête** : 1000 résultats max
 
 #### **Timeouts**
 - **Connexion** : 30 secondes
