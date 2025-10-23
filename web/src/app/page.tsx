@@ -698,13 +698,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-cursor-bg-primary flex">
-      {/* Sidebar fixe avec style professionnel */}
-      <aside className="w-80 bg-gradient-to-b from-[#1e1e1e] via-[#1a1a1a] to-[#161616] border-r border-[#2a2a2a] fixed left-0 top-0 h-screen overflow-y-auto shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+      {/* Sidebar fixe avec style professionnel - avec padding-top pour le header */}
+      <aside className="w-80 bg-gradient-to-b from-[#1e1e1e] via-[#1a1a1a] to-[#161616] border-r border-[#2a2a2a] fixed left-0 top-14 h-[calc(100vh-3.5rem)] overflow-y-auto shadow-[2px_0_8px_rgba(0,0,0,0.15)]">
         <div className="p-6">
           {/* Title section avec séparateur élégant */}
           <div className="mb-8 pb-5 relative">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md shadow-blue-500/10">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -728,7 +728,7 @@ export default function Home() {
               <div className="w-1 h-3 bg-blue-500 rounded-full"></div>
               Progression
             </h2>
-            <div className="relative bg-[#1a1a1a] p-4 rounded-xl border border-[#2a2a2a] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+            <div className="relative bg-[#1a1a1a] p-4 rounded-xl border border-[#2a2a2a] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
               <Stepper 
                 steps={wizardSteps} 
                 currentStep={currentStep}
@@ -762,7 +762,7 @@ export default function Home() {
                 </div>
                 <div className="w-full bg-[#1a1a1a] rounded-full h-1.5 mb-2 overflow-hidden border border-[#2a2a2a]">
                   <div 
-                    className="bg-gradient-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                    className="bg-gradient-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all duration-300 shadow-[0_0_6px_rgba(59,130,246,0.3)]"
                     style={{ width: `${(apiStreaming.streamingProgress.current / apiStreaming.streamingProgress.total) * 100}%` }}
                   ></div>
                 </div>
@@ -784,7 +784,7 @@ export default function Home() {
                 </div>
                 <div className="w-full bg-[#1a1a1a] rounded-full h-1.5 mb-1 overflow-hidden border border-[#2a2a2a]">
                   <div 
-                    className="bg-gradient-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                    className="bg-gradient-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all duration-300 shadow-[0_0_6px_rgba(59,130,246,0.3)]"
                     style={{ width: `${(chunkResults.filter(r => r !== null).length / siretChunks.length) * 100}%` }}
                   ></div>
                 </div>
@@ -973,7 +973,7 @@ export default function Home() {
         {currentStep === 3 && (
           <div className="card-surface p-6 mb-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -1050,88 +1050,84 @@ export default function Home() {
 
         {/* Interface de traitement par chunks - visible à l'étape 2 et 3 */}
         {(currentStep === 2 || currentStep === 3) && siretChunks.length > 0 && (
-          <div className="card-surface p-6 mb-6">
+          <div className="card-surface p-5 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-medium text-cursor-text-primary">Traitement par Chunks</h3>
-                <p className="text-sm text-cursor-text-secondary mt-1">
-                  {siretChunks.flat().length} SIRETs à vérifier • {siretChunks.length} chunk{siretChunks.length > 1 ? 's' : ''} de max 250
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-cursor-text-primary">Traitement par Chunks</h3>
+                  <p className="text-xs text-cursor-text-secondary">
+                    {siretChunks.flat().length} SIRETs • {siretChunks.length} chunk{siretChunks.length > 1 ? 's' : ''} • Max 250 par chunk
+                  </p>
+                </div>
               </div>
-              <div className="text-xs text-cursor-text-muted">
-                Optimisé HTTP/2 + API INSEE
+              <div className="flex items-center gap-2 px-2 py-1 rounded bg-purple-600/10 border border-purple-600/20">
+                <span className="text-xs font-medium text-purple-400 tabular-nums">
+                  {chunkResults.filter(r => r !== null).length}/{siretChunks.length}
+                </span>
               </div>
             </div>
             
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               {siretChunks.map((chunk, index) => {
                 const isProcessed = chunkResults[index] !== null;
                 const isProcessing = chunkProcessing[index];
-                const isCurrent = index === currentChunkIndex;
+                const canProcess = !isProcessed && !isProcessing && !chunkProcessing.some(processing => processing);
                 
                 return (
-                  <div key={index} className={`p-4 rounded-lg border ${
-                    isCurrent ? 'border-blue-500 bg-blue-900/20' : 
-                    isProcessed ? 'border-green-500 bg-green-900/20' : 
-                    'border-cursor-border-primary bg-cursor-bg-secondary'
-                  }`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                          isProcessed ? 'bg-green-500 text-white' :
-                          isProcessing ? 'bg-blue-500 text-white animate-pulse' :
-                          'bg-gray-500 text-white'
-                        }`}>
-                          {isProcessed ? '✓' : index + 1}
-                        </div>
-                        <div>
-                          <div className={`font-medium ${
-                            isCurrent ? 'text-blue-100' :
-                            isProcessed ? 'text-green-100' :
-                            'text-cursor-text-primary'
-                          }`}>
-                            Chunk {index + 1} - {chunk.length} SIRETs
-                          </div>
-                          <div className={`text-sm ${
-                            isCurrent ? 'text-blue-300' :
-                            isProcessed ? 'text-green-300' :
-                            'text-cursor-text-secondary'
-                          }`}>
-                            SIRETs {index * 250 + 1} à {Math.min((index + 1) * 250, siretChunks.flat().length)}
-                          </div>
-                        </div>
+                  <button
+                    key={index}
+                    onClick={() => canProcess && processChunk(index)}
+                    disabled={!canProcess || isProcessed}
+                    className={`p-3 rounded-lg border transition-all relative group ${
+                      isProcessed 
+                        ? 'border-green-500/30 bg-green-900/20 cursor-default' 
+                        : isProcessing 
+                          ? 'border-blue-500/50 bg-blue-900/30 cursor-wait animate-pulse' 
+                          : canProcess
+                            ? 'border-[#2a2a2a] bg-[#1a1a1a] hover:border-blue-500/50 hover:bg-blue-900/10 cursor-pointer'
+                            : 'border-[#2a2a2a] bg-[#1a1a1a] opacity-50 cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        isProcessed ? 'bg-green-500 text-white' :
+                        isProcessing ? 'bg-blue-500 text-white' :
+                        'bg-gray-600 text-gray-300'
+                      }`}>
+                        {isProcessed ? '✓' : index + 1}
                       </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {isProcessed && (
-                          <div className="text-sm text-green-400 font-medium">
-                            ✓ Terminé ({chunkResults[index]?.length || 0} résultats)
-                          </div>
-                        )}
-                        
-                        {!isProcessed && !isProcessing && !chunkProcessing.some(processing => processing) && (
-                          <button
-                            onClick={() => processChunk(index)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                          >
-                            Lancer le scan
-                          </button>
-                        )}
-                        
-                        {!isProcessed && !isProcessing && chunkProcessing.some(processing => processing) && (
-                          <div className="text-sm text-cursor-text-muted">
-                            Un autre chunk est en cours de traitement
-                          </div>
-                        )}
-                        
-                        {isProcessing && (
-                          <div className="px-4 py-2 bg-blue-900 text-blue-300 rounded-lg text-sm">
-                            Traitement...
-                          </div>
-                        )}
-                      </div>
+                      <span className={`text-xs font-semibold ${
+                        isProcessed ? 'text-green-400' :
+                        isProcessing ? 'text-blue-400' :
+                        'text-cursor-text-primary'
+                      }`}>
+                        Chunk {index + 1}
+                      </span>
                     </div>
-                  </div>
+                    <div className="text-xs text-cursor-text-muted text-left">
+                      {chunk.length} SIRET{chunk.length > 1 ? 's' : ''}
+                    </div>
+                    
+                    {isProcessing && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-blue-900/40 rounded-lg">
+                        <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    
+                    {canProcess && (
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-blue-600/20 rounded-lg transition-opacity">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
                 );
               })}
             </div>

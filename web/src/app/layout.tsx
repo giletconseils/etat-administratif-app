@@ -30,9 +30,31 @@ export default function RootLayout({
     <html lang="fr" data-theme="dark">
       <body className={`${sans.variable} ${mono.variable} antialiased bg-cursor-bg-primary text-cursor-text-primary`}>
         <div className="min-h-screen">
+          {/* Header avec logo */}
+          <header className="fixed top-0 left-0 right-0 z-50 bg-[#1e1e1e]/95 backdrop-blur-sm border-b border-[#2a2a2a]">
+            <div className="px-6 py-3 flex items-center gap-3">
+              {/* Icône du logo - crop pour ne montrer que la partie graphique (gauche) */}
+              <div className="w-7 h-8 overflow-hidden flex-shrink-0">
+                <img 
+                  src="/fairfair-logo.png" 
+                  alt="" 
+                  className="h-8 w-auto"
+                  style={{ 
+                    maxWidth: 'none',
+                    objectFit: 'cover',
+                    objectPosition: 'left center'
+                  }}
+                />
+              </div>
+              {/* Texte en vrai HTML */}
+              <h1 className="text-xl font-bold text-white tracking-tight">
+                FAIRFAIR Group
+              </h1>
+            </div>
+          </header>
           
-          {/* CURSOR-style main content */}
-          <main className="mx-auto max-w-7xl px-6 py-8">
+          {/* CURSOR-style main content avec padding-top pour compenser le header fixe */}
+          <main className="mx-auto max-w-7xl px-6 py-8 pt-20">
             {children}
           </main>
         </div>
