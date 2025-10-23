@@ -1,14 +1,14 @@
 import { promises as fs } from "fs";
 import path from "path";
 import Papa from "papaparse";
-import { RIAnomalyResult, AssureurDetail, Mission, Assureur, RIThresholds, DEFAULT_RI_THRESHOLDS } from "./types";
+import { RIAnomalyResult, PrescripteurDetail, Mission, Prescripteur, RIThresholds, DEFAULT_RI_THRESHOLDS } from "./types";
 
 const MISSIONS_PATH = path.join(
   process.cwd(),
   "../data/csv-files/missions/missions.csv"
 );
 
-const ASSUREURS_PATH = path.join(
+const PRESCRIPTEURS_PATH = path.join(
   process.cwd(),
   "../data/csv-files/assureurs/assureurs.csv"
 );
@@ -47,21 +47,21 @@ async function loadMissions(): Promise<Mission[]> {
 }
 
 /**
- * Load assureur percentages from CSV file
+ * Load prescripteur percentages from CSV file
  */
-async function loadAssureurs(): Promise<Map<number, Assureur>> {
+async function loadPrescripteurs(): Promise<Map<number, Prescripteur>> {
   try {
-    const content = await fs.readFile(ASSUREURS_PATH, "utf-8");
+    const content = await fs.readFile(PRESCRIPTEURS_PATH, "utf-8");
     const parsed = Papa.parse<Record<string, string>>(content, {
       header: true,
       skipEmptyLines: true,
     });
 
-    const assureursMap = new Map<number, Assureur>();
+    const prescripteursMap = new Map<number, Prescripteur>();
     parsed.data.forEach((row) => {
       const id = parseInt(row.id, 10);
       if (!isNaN(id)) {
-        assureursMap.set(id, {
+        prescripteursMap.set(id, {
           id,
           name: row.name,
           ri_percentage: parseFloat(row.ri_percentage || "0"),
@@ -69,15 +69,15 @@ async function loadAssureurs(): Promise<Map<number, Assureur>> {
       }
     });
 
-    return assureursMap;
+    return prescripteursMap;
   } catch (error) {
-    console.error("Error loading assureurs:", error);
-    throw new Error("Impossible de charger les assureurs");
+    console.error("Error loading prescripteurs:", error);
+    throw new Error("Impossible de charger les prescripteurs");
   }
 }
 
 /**
- * Get company name from sous-traitants database
+ * Get company name from intervenants database
  */
 async function getCompanyName(siret: string): Promise<string> {
   try {
@@ -229,7 +229,7 @@ export async function execute(
 }
 
 /**
- * Execute RI anomaly detection for ALL subcontractors (batch mode)
+ * Execute RI anomaly detection for ALL intervenants réseaux (batch mode)
  * Filters based on enabled statuses and only keeps those with at least minMissions
  */
 export async function executeAll(
@@ -289,7 +289,7 @@ export async function executeAll(
       return allowedStatusCodes.includes(status);
     });
 
-    console.log(`[RI Batch] Total sous-traitants: ${soustraitantsParsed.data.length}`);
+    console.log(`[RI Batch] Total intervenants réseaux: ${soustraitantsParsed.data.length}`);
     console.log(`[RI Batch] Après filtre de statuts: ${filteredSubcontractors.length}`);
 
     // 5. Charger les missions et assureurs

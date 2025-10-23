@@ -4,6 +4,9 @@ import { useSearchParams } from "next/navigation";
 import Papa from "papaparse";
 import * as XLSX from 'xlsx';
 
+// Mark this page as dynamic since it uses useSearchParams
+export const dynamic = 'force-dynamic';
+
 // Types et utilitaires
 import { 
   Checked, 
@@ -192,7 +195,7 @@ function AnalysePageContent() {
     // Dans ce cas, on doit compter le nombre de SIRETs analysés, pas le nombre de résultats
     if (sourceData.length === 0 && !apiStreaming.streamingProgress && !chunkResults.some(result => result !== null) && checked && checked.length === 0) {
       // Si on a fait une recherche mais qu'aucun résultat n'est revenu, 
-      // on doit estimer le nombre d'entreprises analysées
+      // on doit estimer le nombre d'intervenants réseaux analysés
       // Pour la recherche manuelle, on peut utiliser manualSirets.length
       totalAnalyzed = manualSirets.length;
     }
@@ -359,7 +362,7 @@ function AnalysePageContent() {
       
       // Vérifier le statut de toutes les entreprises via l'API SIRENE
       const allSirets = baseResults.map(item => item.siret).filter(Boolean);
-      console.log(`[DEBUG] 📊 Base sous-traitants chargée : ${baseResults.length} entreprises`);
+      console.log(`[DEBUG] 📊 Base sous-traitants chargée : ${baseResults.length} intervenants réseaux`);
       console.log(`[DEBUG] 🔍 SIRETs à vérifier : ${allSirets.length}`);
       console.log('[DEBUG] Premiers SIRETs:', allSirets.slice(0, 5));
       
@@ -453,7 +456,7 @@ function AnalysePageContent() {
         setRiProcessingStep('Chargement des données...');
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        setRiProcessingStep(isBatchMode ? 'Filtrage des sous-traitants...' : 'Récupération des missions...');
+        setRiProcessingStep(isBatchMode ? 'Filtrage des intervenants réseaux...' : 'Récupération des missions...');
         await new Promise(resolve => setTimeout(resolve, 500));
         
         setRiProcessingStep('Calcul des RI théoriques...');
@@ -772,11 +775,11 @@ function AnalysePageContent() {
     ];
     ws['!cols'] = colWidths;
     
-    XLSX.utils.book_append_sheet(wb, ws, 'Entreprises radiees');
+    XLSX.utils.book_append_sheet(wb, ws, 'Intervenants réseaux radiés');
     
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
-    const fileName = `entreprises_radiees_et_en_procedure_${dateStr}.xlsx`;
+    const fileName = `intervenants_reseaux_radies_et_en_procedure_${dateStr}.xlsx`;
     
     XLSX.writeFile(wb, fileName);
   };
@@ -784,7 +787,7 @@ function AnalysePageContent() {
   return (
     <div className="min-h-screen bg-cursor-bg-primary flex">
       {/* Sidebar fixe avec style professionnel - avec padding-top pour le header */}
-      <aside className="w-80 bg-gradient-to-b from-cursor-bg-elevated via-cursor-bg-tertiary to-cursor-bg-secondary border-r border-cursor-border-primary fixed left-0 top-14 h-[calc(100vh-3.5rem)] overflow-y-auto shadow-[2px_0_8px_rgba(0,0,0,0.15)]">
+      <aside className="w-80 bg-gradient-to-b from-cursor-bg-elevated via-cursor-bg-tertiary to-cursor-bg-secondary border-r border-cursor-border-primary/10 fixed left-0 top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
         <div className="p-6">
           {/* Title section avec séparateur élégant */}
           <div className="mb-8 pb-5 relative">
@@ -808,7 +811,7 @@ function AnalysePageContent() {
                 <h1 className="text-lg font-bold text-cursor-text-primary leading-tight">
                   {selectedTreatments[0] === 'ri-anomalies' 
                     ? 'Détection d\'anomalies RI' 
-                    : 'Analyse d\'entreprises'}
+                    : 'Analyse d\'intervenants réseaux'}
                 </h1>
               </div>
             </div>
@@ -818,7 +821,7 @@ function AnalysePageContent() {
                 : 'Vérification des radiations et procédures collectives'}
             </p>
             {/* Séparateur élégant avec dégradé */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#2a2a2a] to-transparent"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cursor-border-primary/15 to-transparent"></div>
           </div>
 
           {/* Carte Progression avec bordure animée ou verte si terminé */}
@@ -862,7 +865,7 @@ function AnalysePageContent() {
                           {apiStreaming.streamingProgress.current} / {apiStreaming.streamingProgress.total}
                         </span>
                       </div>
-                      <div className="w-full bg-cursor-bg-secondary rounded-full h-1.5 mb-1.5 overflow-hidden border border-cursor-border-primary">
+                      <div className="w-full bg-cursor-bg-secondary rounded-full h-1.5 mb-1.5 overflow-hidden border border-cursor-border-primary/30">
                         <div 
                           className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                           style={{ width: `${(apiStreaming.streamingProgress.current / apiStreaming.streamingProgress.total) * 100}%` }}
@@ -883,7 +886,7 @@ function AnalysePageContent() {
                           {chunkResults.filter(r => r !== null).length} / {siretChunks.length}
                         </span>
                       </div>
-                      <div className="w-full bg-cursor-bg-secondary rounded-full h-1.5 mb-1 overflow-hidden border border-cursor-border-primary">
+                      <div className="w-full bg-cursor-bg-secondary rounded-full h-1.5 mb-1 overflow-hidden border border-cursor-border-primary/30">
                         <div 
                           className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                           style={{ width: `${(chunkResults.filter(r => r !== null).length / siretChunks.length) * 100}%` }}
@@ -939,7 +942,7 @@ function AnalysePageContent() {
                         <div>
                           <p className="text-xs font-medium text-cursor-accent-red mb-1">Statuts U3 et U4 exclus</p>
                           <p className="text-xs text-cursor-text-muted">
-                            Les sous-traitants avec les statuts U3 et U4 ne sont pas inclus dans l&apos;analyse de détection des anomalies RI.
+                            Les intervenants réseaux avec les statuts U3 et U4 ne sont pas inclus dans l&apos;analyse de détection des anomalies RI.
                           </p>
                         </div>
                       </div>
@@ -966,7 +969,7 @@ function AnalysePageContent() {
                           </span>
                         </div>
                         <p className="text-xs text-cursor-text-muted mt-2">
-                          Seuls les sous-traitants avec au moins {minMissions} mission{minMissions > 1 ? 's' : ''} effectuée{minMissions > 1 ? 's' : ''} sur les 3 derniers mois seront analysés
+                          Seuls les intervenants réseaux avec au moins {minMissions} mission{minMissions > 1 ? 's' : ''} effectuée{minMissions > 1 ? 's' : ''} sur les 3 derniers mois seront analysés
                         </p>
                       </div>
                     </div>
@@ -985,7 +988,7 @@ function AnalysePageContent() {
               </Tabs>
               
               {/* Action button for step 1 - lancer directement l'analyse */}
-              <div className="pt-4 border-t border-cursor-border-primary mt-6">
+              <div className="pt-4 border-t border-cursor-border-primary/20 mt-6">
                 <button
                   onClick={runCompleteProcess}
                   disabled={loading || !canRunAnalysis()}
@@ -1020,7 +1023,7 @@ function AnalysePageContent() {
                 
                 {/* Detailed info section - collapsible */}
                 {showDetailedInfo && (
-                  <div className="p-3 bg-cursor-bg-tertiary rounded border border-cursor-border-primary">
+                  <div className="p-3 bg-cursor-bg-tertiary rounded border border-cursor-border-primary/20">
                     <div className="text-sm text-cursor-text-secondary space-y-1">
                       {manualSirets.length > 0 ? (
                         <div>
@@ -1158,7 +1161,7 @@ function AnalysePageContent() {
                         {apiStreaming.streamingProgress.current} / {apiStreaming.streamingProgress.total}
                       </span>
                     </div>
-                    <div className="w-full bg-cursor-bg-tertiary rounded-full h-2 mb-2 overflow-hidden border border-cursor-border-primary">
+                    <div className="w-full bg-cursor-bg-tertiary rounded-full h-2 mb-2 overflow-hidden border border-cursor-border-primary/30">
                       <div 
                         className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                         style={{ 
@@ -1227,7 +1230,7 @@ function AnalysePageContent() {
               </div>
             </div>
             {bodaccEnrichment.error && (
-              <div className="mt-4 p-3 bg-cursor-bg-tertiary border border-cursor-border-primary rounded">
+              <div className="mt-4 p-3 bg-cursor-bg-tertiary border border-cursor-border-primary/20 rounded">
                 <div className="text-sm text-cursor-text-muted">
                   Erreur BODACC: {bodaccEnrichment.error}
                 </div>
@@ -1277,8 +1280,8 @@ function AnalysePageContent() {
                         : isProcessing 
                           ? 'border-cursor-accent-button/50 bg-cursor-accent-button/20 cursor-wait animate-pulse' 
                           : canProcess
-                            ? 'border-cursor-border-primary bg-cursor-bg-tertiary hover:border-cursor-accent-button/50 hover:bg-cursor-accent-button/10 cursor-pointer'
-                            : 'border-cursor-border-primary bg-cursor-bg-tertiary opacity-50 cursor-not-allowed'
+                            ? 'border-cursor-border-primary/30 bg-cursor-bg-tertiary hover:border-cursor-accent-button/50 hover:bg-cursor-accent-button/10 cursor-pointer'
+                            : 'border-cursor-border-primary/30 bg-cursor-bg-tertiary opacity-50 cursor-not-allowed'
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1.5">
@@ -1350,7 +1353,7 @@ function AnalysePageContent() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium text-cursor-text-primary">Montant total</h3>
-                <p className="text-sm text-cursor-text-secondary">Entreprises radiées et en procédure</p>
+                <p className="text-sm text-cursor-text-secondary">Intervenants réseaux radiés et en procédure</p>
                 {fileProcessing.headerMap.montant && (
                   <p className="text-xs text-cursor-text-muted mt-1">
                     Colonne &quot;{fileProcessing.headerMap.montant.startsWith('col_') 

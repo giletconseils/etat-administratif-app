@@ -72,7 +72,7 @@ body {
 .card-surface {
   background-color: var(--cursor-bg-secondary);
   color: var(--cursor-text-primary);
-  border: 1px solid var(--cursor-border-primary);
+  border: 1px solid rgba(42, 42, 42, 0.3);
   border-radius: 0.75rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
   transition: all 150ms ease;
@@ -124,7 +124,7 @@ body {
 .btn-cursor-secondary {
   background-color: var(--cursor-bg-secondary);
   color: var(--cursor-text-primary);
-  border-color: var(--cursor-border-primary);
+  border-color: rgba(42, 42, 42, 0.3);
 }
 
 .btn-cursor-secondary:hover:not(:disabled) {
@@ -136,7 +136,7 @@ body {
 .input-cursor {
   background-color: var(--cursor-bg-secondary);
   color: var(--cursor-text-primary);
-  border: 1px solid var(--cursor-border-primary);
+  border: 1px solid rgba(42, 42, 42, 0.3);
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
@@ -392,11 +392,11 @@ body {
 .animated-border {
   position: relative;
   background: linear-gradient(90deg, 
-    rgba(59, 130, 246, 0.2) 0%, 
-    rgba(59, 130, 246, 0.6) 25%, 
-    rgba(96, 165, 250, 0.8) 50%, 
-    rgba(59, 130, 246, 0.6) 75%, 
-    rgba(59, 130, 246, 0.2) 100%
+    rgba(59, 130, 246, 0.1) 0%, 
+    rgba(59, 130, 246, 0.3) 25%, 
+    rgba(96, 165, 250, 0.4) 50%, 
+    rgba(59, 130, 246, 0.3) 75%, 
+    rgba(59, 130, 246, 0.1) 100%
   );
   background-size: 200% 100%;
   animation: rotateBorder 3s ease-in-out infinite;

@@ -156,7 +156,7 @@ export default function JoinPage() {
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Jointures de données</h1>
             <p className="mt-2 text-sm text-neutral-600">
-              Combinez les données des différents statuts d&apos;entreprises
+              Combinez les données des différents statuts d&apos;intervenants réseaux
             </p>
           </div>
           <Link 

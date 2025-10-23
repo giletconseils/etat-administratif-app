@@ -273,14 +273,14 @@ export default function DataPage() {
           expectedColumns="prescriber_id, company_id, siret, SERVICE_B2CSDU_ORDER → external_id"
         />
 
-        {/* Section Assureurs */}
+        {/* Section Prescripteurs */}
         <div className="card-surface p-6 mb-6">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-cursor-text-primary mb-2">
-              Assureurs et % RI
+              Taux de transformation RI par prescripteur
             </h2>
             <p className="text-sm text-cursor-text-secondary">
-              Pourcentages de chance qu&apos;une mission DU engendre une RI par assureur
+              Pourcentages de chance qu&apos;une mission DU engendre une RI par prescripteur
             </p>
           </div>
 
@@ -405,7 +405,7 @@ export default function DataPage() {
                 }}
               />
               <p className="text-xs text-cursor-text-muted mt-2">
-                Les entreprises avec un écart inférieur à {riThresholds.warningThreshold}% seront marquées en sous-déclaration
+                Les intervenants réseaux avec un écart inférieur à {riThresholds.warningThreshold}% seront marqués en sous-déclaration
               </p>
             </div>
 
@@ -439,7 +439,7 @@ export default function DataPage() {
                 }}
               />
               <p className="text-xs text-cursor-text-muted mt-2">
-                Les entreprises avec un écart supérieur à +{riThresholds.excellentThreshold}% seront marquées comme excellentes
+                Les intervenants réseaux avec un écart supérieur à +{riThresholds.excellentThreshold}% seront marqués comme excellents
               </p>
             </div>
           </div>

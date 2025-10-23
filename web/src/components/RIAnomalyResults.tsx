@@ -257,7 +257,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div className="text-center p-3 bg-cursor-bg-secondary rounded-lg">
               <div className="text-xl font-bold text-blue-400">{globalStats.totalCompanies}</div>
-              <div className="text-xs text-cursor-text-muted mt-1">Entreprises</div>
+              <div className="text-xs text-cursor-text-muted mt-1">Intervenants réseaux</div>
             </div>
             <div className="text-center p-3 bg-cursor-bg-secondary rounded-lg">
               <div className="text-xl font-bold text-blue-400">{globalStats.totalMissions}</div>

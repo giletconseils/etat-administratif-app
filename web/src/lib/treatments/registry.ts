@@ -6,7 +6,7 @@ export const TREATMENT_REGISTRY: Record<TreatmentType, TreatmentMetadata> = {
   'radiation-check': {
     id: 'radiation-check',
     name: 'Identifier les radiations / procédures',
-    description: 'Vérifie le statut administratif des entreprises (radiées, en procédure collective)',
+    description: 'Vérifie le statut administratif des intervenants réseaux (radiés, en procédure collective)',
     enabled: true,
   },
   'ri-anomalies': {

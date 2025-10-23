@@ -156,7 +156,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
           <div className="flex-1">
             <h2 className="text-xl font-bold text-cursor-text-primary">Analyse terminée</h2>
             <p className="text-sm text-cursor-text-secondary">
-              {totalAnalyzed} sous-traitants analysés • {minMissions}+ mission{minMissions > 1 ? 's' : ''} (3 derniers mois)
+              {totalAnalyzed} intervenants réseaux analysés • {minMissions}+ mission{minMissions > 1 ? 's' : ''} (3 derniers mois)
             </p>
           </div>
         </div>
@@ -175,7 +175,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
               <span className="text-cursor-text-muted">Taux de fraude potentielle</span>
               <span className="text-blue-400 font-semibold tabular-nums">{fraudPercentage}%</span>
             </div>
-            <div className="w-full bg-cursor-bg-tertiary rounded-full h-2 overflow-hidden border border-cursor-border-primary">
+            <div className="w-full bg-cursor-bg-tertiary rounded-full h-2 overflow-hidden border border-cursor-border-primary/30">
               <div 
                 className="bg-gradient-to-r from-red-500 to-orange-500 h-2 rounded-full transition-all duration-500"
                 style={{ 
@@ -221,7 +221,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
       <div className="card-surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-cursor-bg-tertiary border-b border-cursor-border-primary">
+            <thead className="bg-cursor-bg-tertiary border-b border-cursor-border-primary/30">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">Rang</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">SIRET</th>
@@ -234,7 +234,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                 <th className="px-6 py-4 text-center text-sm font-semibold text-cursor-text-secondary uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-cursor-border-primary">
+            <tbody className="divide-y divide-cursor-border-primary/20">
               {paginatedResults.map((result) => {
                 const isExpanded = expandedSirets.has(result.siret);
                 const hasDetails = result.detailsByAssureur && result.detailsByAssureur.length > 0;

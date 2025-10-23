@@ -50,7 +50,7 @@ export function ResultsTable({
                 Tous vos sous-traitants sont en règle ✓
               </h3>
               <p className="text-cursor-text-secondary text-sm">
-                Sur les <span className="font-semibold text-cursor-text-primary">{stats?.current || 0}</span> entreprises analysées, aucune n&apos;est radiée ou en procédure collective.
+                Sur les <span className="font-semibold text-cursor-text-primary">{stats?.current || 0}</span> intervenants réseaux analysés, aucun n&apos;est radié ou en procédure collective.
               </p>
             </div>
           </div>
@@ -73,7 +73,7 @@ export function ResultsTable({
             <div>
               <h2 className="text-xl font-bold text-cursor-text-primary">Résultats de l&apos;analyse</h2>
               <p className="text-xs text-cursor-text-secondary mt-0.5">
-                Entreprises nécessitant une attention particulière
+                Intervenants réseaux nécessitant une attention particulière
               </p>
             </div>
           </div>
@@ -107,7 +107,7 @@ export function ResultsTable({
               </div>
               <div className="h-6 w-px bg-[#2a2a2a]"></div>
               <span className="text-xs text-cursor-text-secondary">
-                Entreprises radiées ou en procédure
+                Intervenants réseaux radiés ou en procédure
                 {streamingProgress && (
                   <span className="ml-2 text-cursor-text-muted">
                     (Total: <span className="font-medium text-cursor-text-secondary tabular-nums">{stats?.total || 0}</span>)

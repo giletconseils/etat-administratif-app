@@ -1,4 +1,4 @@
 {
-  "warningThreshold": -40,
-  "excellentThreshold": 40
+  "warningThreshold": -50,
+  "excellentThreshold": 50
 }

@@ -98,7 +98,7 @@ export function enrichWithAmounts(
   });
 }
 
-// Fonction pour calculer le montant total des entreprises radiées
+// Fonction pour calculer le montant total des intervenants réseaux radiés
 export function calculateTotalAmount(results: Checked[]): number {
   const radiees = results.filter(r => r.estRadiee);
   

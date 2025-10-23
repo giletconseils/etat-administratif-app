@@ -8,7 +8,7 @@ export interface RIAnomalyResult {
   riReel: number;
   ecartPercent: number;
   status: 'warning' | 'ok' | 'excellent';
-  detailsByAssureur: AssureurDetail[];
+  detailsByPrescripteur: PrescripteurDetail[];
   status_reseau?: number; // Pour filtrer U3/U4
   ranking?: number; // Pour le tri dans le mode batch
 }
@@ -31,9 +31,9 @@ export const DEFAULT_RI_THRESHOLDS: RIThresholds = {
   excellentThreshold: 10,
 };
 
-export interface AssureurDetail {
-  assureurId: number;
-  assureurName: string;
+export interface PrescripteurDetail {
+  prescripteurId: number;
+  prescripteurName: string;
   missionsDU: number;
   riTheorique: number;
   riReel: number;
@@ -47,7 +47,7 @@ export interface Mission {
   has_ri: boolean; // True if SERVICE_B2CSDU_ORDER → external_id is not empty
 }
 
-export interface Assureur {
+export interface Prescripteur {
   id: number;
   name: string;
   ri_percentage: number;
