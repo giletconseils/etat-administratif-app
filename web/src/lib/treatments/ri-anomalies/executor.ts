@@ -105,7 +105,7 @@ async function getCompanyName(siret: string): Promise<string> {
 async function executeSingle(
   siret: string,
   missions: Mission[],
-  assureursMap: Map<number, Assureur>,
+  prescripteursMap: Map<number, Prescripteur>,
   thresholds: RIThresholds = DEFAULT_RI_THRESHOLDS
 ): Promise<RIAnomalyResult> {
   const denomination = await getCompanyName(siret);
@@ -122,29 +122,29 @@ async function executeSingle(
       riReel: 0,
       ecartPercent: 0,
       status: "ok",
-      detailsByAssureur: [],
+      detailsByPrescripteur: [],
     };
   }
 
-  // Group missions by prescriber_id (assureur)
-  const missionsByAssureur = new Map<number, Mission[]>();
+  // Group missions by prescriber_id (prescripteur)
+  const missionsByPrescripteur = new Map<number, Mission[]>();
   siretMissions.forEach((mission) => {
-    if (!missionsByAssureur.has(mission.prescriber_id)) {
-      missionsByAssureur.set(mission.prescriber_id, []);
+    if (!missionsByPrescripteur.has(mission.prescriber_id)) {
+      missionsByPrescripteur.set(mission.prescriber_id, []);
     }
-    missionsByAssureur.get(mission.prescriber_id)!.push(mission);
+    missionsByPrescripteur.get(mission.prescriber_id)!.push(mission);
   });
 
-  // Calculate statistics by assureur
-  const detailsByAssureur: AssureurDetail[] = [];
+  // Calculate statistics by prescripteur
+  const detailsByPrescripteur: PrescripteurDetail[] = [];
   let totalMissionsDU = 0;
   let totalRITheorique = 0;
   let totalRIReel = 0;
 
-  missionsByAssureur.forEach((missions, assureurId) => {
-    const assureur = assureursMap.get(assureurId);
-    const assureurName = assureur?.name || `Assureur ${assureurId}`;
-    const riPercentage = assureur?.ri_percentage || 0;
+  missionsByPrescripteur.forEach((missions, prescripteurId) => {
+    const prescripteur = prescripteursMap.get(prescripteurId);
+    const prescripteurName = prescripteur?.name || `Prescripteur ${prescripteurId}`;
+    const riPercentage = prescripteur?.ri_percentage || 0;
 
     const missionsDU = missions.length;
     const riTheorique = (missionsDU * riPercentage) / 100;
@@ -156,9 +156,9 @@ async function executeSingle(
     totalRITheorique += riTheorique;
     totalRIReel += riReel;
 
-    detailsByAssureur.push({
-      assureurId,
-      assureurName,
+    detailsByPrescripteur.push({
+      prescripteurId,
+      prescripteurName,
       missionsDU,
       riTheorique,
       riReel,
@@ -181,8 +181,8 @@ async function executeSingle(
     status = "ok";
   }
 
-  // Sort details by assureur name
-  detailsByAssureur.sort((a, b) => a.assureurName.localeCompare(b.assureurName));
+  // Sort details by prescripteur name
+  detailsByPrescripteur.sort((a, b) => a.prescripteurName.localeCompare(b.prescripteurName));
 
   return {
     siret,
@@ -192,7 +192,7 @@ async function executeSingle(
     riReel: totalRIReel,
     ecartPercent: ecartPercentGlobal,
     status,
-    detailsByAssureur,
+    detailsByPrescripteur,
   };
 }
 
@@ -208,11 +208,11 @@ export async function execute(
 
   // Load shared data once
   const missions = await loadMissions();
-  const assureursMap = await loadAssureurs();
+  const prescripteursMap = await loadPrescripteurs();
 
   // Process all SIRETs
   const results = await Promise.all(
-    siretArray.map((siret) => executeSingle(siret, missions, assureursMap, thresholds))
+    siretArray.map((siret) => executeSingle(siret, missions, prescripteursMap, thresholds))
   );
 
   // Sort results by ecartPercent (ascending), then by totalMissionsDU (descending) for equal ecart
@@ -292,9 +292,9 @@ export async function executeAll(
     console.log(`[RI Batch] Total intervenants réseaux: ${soustraitantsParsed.data.length}`);
     console.log(`[RI Batch] Après filtre de statuts: ${filteredSubcontractors.length}`);
 
-    // 5. Charger les missions et assureurs
+    // 5. Charger les missions et prescripteurs
     const missions = await loadMissions();
-    const assureursMap = await loadAssureurs();
+    const prescripteursMap = await loadPrescripteurs();
 
     // 6. Pour chaque sous-traitant, compter ses missions
     const subcontractorsWithMissionCount = filteredSubcontractors.map((sub) => {
@@ -317,7 +317,7 @@ export async function executeAll(
     // 8. Exécuter executeSingle() pour chacun
     const results = await Promise.all(
       eligibleSubcontractors.map(async (sub) => {
-        const result = await executeSingle(sub.siret, missions, assureursMap, thresholds);
+        const result = await executeSingle(sub.siret, missions, prescripteursMap, thresholds);
         return {
           ...result,
           status_reseau: sub.status,

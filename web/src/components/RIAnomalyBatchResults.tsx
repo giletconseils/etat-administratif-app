@@ -36,7 +36,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
       'RI Réel': result.riReel,
       'Écart %': result.ecartPercent.toFixed(1),
       'Statut': result.status === 'warning' ? 'Sous-déclaration' : result.status === 'excellent' ? 'Excellent' : 'Conforme',
-      'Nb Assureurs': result.detailsByAssureur?.length || 0,
+      'Nb Prescripteurs': result.detailsByPrescripteur?.length || 0,
     }));
 
     const wb = XLSX.utils.book_new();
