@@ -15,6 +15,23 @@ Staging    : https://staging-etat-administratif-app.railway.app
 Local      : http://localhost:3000
 ```
 
+### **APIs externes utilisées**
+
+#### **API INSEE SIRENE V3**
+```
+Base URL    : https://api.insee.fr
+Token URL   : https://api.insee.fr/token
+SIRET URL   : https://api.insee.fr/api-sirene/3.11/siret/{siret}
+Documentation : https://api.insee.fr/catalogue/site/themes/wso2/subthemes/insee/pages/item-info.jag?name=Sirene&version=V3&provider=insee
+```
+
+#### **API BODACC**
+```
+Base URL    : https://api.bodacc.fr
+Documentation : https://api.bodacc.fr/documentation
+Rate Limit  : 100 requêtes/minute
+```
+
 ### **Endpoints disponibles**
 
 #### 1. **API de vérification par SIRET**
@@ -124,6 +141,63 @@ POST https://etat-administratif-app.railway.app/api/enrich-bodacc
 
 ---
 
+## 🌐 APIs externes détaillées
+
+### **INSEE SIRENE V3 - Vérification des entreprises**
+
+#### **Authentification**
+```bash
+# 1. Obtenir un token d'accès
+curl -X POST https://api.insee.fr/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials&client_id={SIRENE_KEY}&client_secret={SIRENE_SECRET}"
+
+# 2. Utiliser le token pour les requêtes
+curl -X GET "https://api.insee.fr/api-sirene/3.11/siret/38076713700017" \
+  -H "Authorization: Bearer {access_token}"
+```
+
+#### **Réponse INSEE SIRENE**
+```json
+{
+  "etablissement": {
+    "siret": "38076713700017",
+    "uniteLegale": {
+      "denominationUniteLegale": "ENTREPRISE TEST",
+      "etatAdministratifUniteLegale": "A" // A=Active, C=Cessée
+    },
+    "etatAdministratifEtablissement": "A",
+    "dateDebutActivite": "2020-01-01"
+  }
+}
+```
+
+### **BODACC - Procédures collectives**
+
+#### **Authentification**
+```bash
+curl -X GET "https://api.bodacc.fr/api/v1/procedures" \
+  -H "Authorization: Bearer {BODACC_API_KEY}" \
+  -H "Content-Type: application/json"
+```
+
+#### **Réponse BODACC**
+```json
+{
+  "procedures": [
+    {
+      "siren": "380767137",
+      "type": "Sauvegarde",
+      "dateOuverture": "2024-01-15",
+      "statut": "En cours",
+      "tribunal": "Tribunal de commerce de Paris"
+    }
+  ]
+}
+```
+
+---
+
 ## 📊 Format des données
 
 ### **Structure de réponse standard**
@@ -167,12 +241,15 @@ interface ProcessingStats {
 - **Délai** : 2 secondes entre chaque requête
 - **Authentification** : Clé d'intégration requise
 - **Timeout** : 60 secondes par requête
+- **URL** : `https://api.insee.fr/api-sirene/3.11/siret/{siret}`
+- **Token** : `https://api.insee.fr/token`
 
 ### **2. Limites API BODACC**
 - **Taux** : 100 requêtes/minute maximum
 - **Délai** : 600ms entre chaque requête
 - **Authentification** : Clé API BODACC requise
 - **Timeout** : 30 secondes par requête
+- **URL** : `https://api.bodacc.fr/api/v1/procedures`
 - **Données** : Historique des 3 dernières années
 - **Types de procédures** : Sauvegarde, Redressement, Liquidation
 
@@ -208,6 +285,10 @@ DATABASE_URL=postgresql://...
 # BODACC API (optionnel mais recommandé)
 BODACC_API_KEY=your-bodacc-key
 BODACC_API_URL=https://api.bodacc.fr
+
+# INSEE API (obligatoire)
+SIRENE_KEY=your-sirene-consumer-key
+SIRENE_SECRET=your-sirene-consumer-secret
 ```
 
 ### **Dépendances système**
