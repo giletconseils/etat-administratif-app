@@ -19,6 +19,8 @@ import { useBodaccEnrichment } from "@/lib/hooks/useBodaccEnrichment";
 import { StatusSelector } from "@/components/StatusSelector";
 import { FileUploader } from "@/components/FileUploader";
 import { ResultsTable } from "@/components/ResultsTable";
+import { SiretSearchBar } from "@/components/SiretSearchBar";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 
 export default function Home() {
   // État principal
@@ -26,6 +28,7 @@ export default function Home() {
   const [enabledStatuses, setEnabledStatuses] = useState<EnabledStatuses>(DEFAULT_ENABLED_STATUSES);
   const [loading, setLoading] = useState(false);
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
+  const [manualSirets, setManualSirets] = useState<string[]>([]);
   
   // État pour le traitement par chunks
   const [siretChunks, setSiretChunks] = useState<string[][]>([]);
@@ -90,25 +93,50 @@ export default function Home() {
 
   const stats = useMemo(() => {
     let sourceData: Checked[] = [];
+    let totalAnalyzed = 0;
     
     // Utiliser les résultats des chunks si disponibles
     if (chunkResults.some(result => result !== null)) {
       sourceData = chunkResults
         .filter(result => result !== null)
         .flat();
+      totalAnalyzed = sourceData.length;
     } else if (apiStreaming.streamingProgress) {
       sourceData = apiStreaming.streamingResults;
+      totalAnalyzed = apiStreaming.streamingProgress.total;
     } else {
       sourceData = checked ?? [];
+      totalAnalyzed = sourceData.length;
     }
     
-    if (!sourceData.length && !apiStreaming.streamingProgress && !chunkResults.some(result => result !== null)) return null;
+    // Cas spécial : recherche manuelle avec aucun résultat radié
+    // Dans ce cas, on doit compter le nombre de SIRETs analysés, pas le nombre de résultats
+    if (sourceData.length === 0 && !apiStreaming.streamingProgress && !chunkResults.some(result => result !== null) && checked && checked.length === 0) {
+      // Si on a fait une recherche mais qu'aucun résultat n'est revenu, 
+      // on doit estimer le nombre d'entreprises analysées
+      // Pour la recherche manuelle, on peut utiliser manualSirets.length
+      totalAnalyzed = manualSirets.length;
+    }
     
-    const total = apiStreaming.streamingProgress ? apiStreaming.streamingProgress.total : sourceData.length;
+    // Ne retourner null que si aucune analyse n'a été effectuée
+    if (totalAnalyzed === 0 && !apiStreaming.streamingProgress && !chunkResults.some(result => result !== null) && !checked) return null;
+    
+    const total = apiStreaming.streamingProgress ? apiStreaming.streamingProgress.total : totalAnalyzed;
     const radiees = sourceData.filter((r) => r.estRadiee).length;
     const enProcedure = sourceData.filter((r) => r.hasActiveProcedures).length;
     const radieesOuEnProcedure = sourceData.filter((r) => r.estRadiee || r.hasActiveProcedures).length;
-    const actives = sourceData.length - radieesOuEnProcedure;
+    const actives = totalAnalyzed - radieesOuEnProcedure;
+    
+    console.log('[DEBUG] Stats calculation:', {
+      'sourceData.length': sourceData.length,
+      'checked.length': checked?.length || 0,
+      'manualSirets.length': manualSirets.length,
+      'streamingProgress': apiStreaming.streamingProgress,
+      'chunkResults.length': chunkResults.length,
+      'totalAnalyzed': totalAnalyzed,
+      'total': total,
+      'current': totalAnalyzed
+    });
     
     return { 
       total, 
@@ -116,9 +144,9 @@ export default function Home() {
       enProcedure,
       radieesOuEnProcedure,
       actives, 
-      current: sourceData.length 
+      current: totalAnalyzed 
     };
-  }, [checked, apiStreaming.streamingResults, apiStreaming.streamingProgress, chunkResults]);
+  }, [checked, apiStreaming.streamingResults, apiStreaming.streamingProgress, chunkResults, manualSirets]);
 
   // Calcul du montant total
   const totalAmount = useMemo(() => {
@@ -149,6 +177,7 @@ export default function Home() {
     setCurrentChunkIndex(0);
     setChunkResults([]);
     setChunkProcessing([]);
+    setManualSirets([]);
   };
 
   // Fonction pour scinder les SIRETs en chunks optimisés pour la rapidité
@@ -245,12 +274,15 @@ export default function Home() {
       
       // Vérifier le statut de toutes les entreprises via l'API SIRENE
       const allSirets = baseResults.map(item => item.siret).filter(Boolean);
-      console.log('[DEBUG] All SIRETs to check:', allSirets.length, allSirets.slice(0, 5));
+      console.log(`[DEBUG] 📊 Base sous-traitants chargée : ${baseResults.length} entreprises`);
+      console.log(`[DEBUG] 🔍 SIRETs à vérifier : ${allSirets.length}`);
+      console.log('[DEBUG] Premiers SIRETs:', allSirets.slice(0, 5));
       
       if (allSirets.length > 0) {
         // Si moins de 250 SIRETs, lancer automatiquement le scan
         if (allSirets.length <= 250) {
           console.log(`🚀 Auto-lancement du scan pour ${allSirets.length} SIRETs (≤ 250)`);
+          console.log(`ℹ️  Pas de chunking nécessaire pour moins de 250 SIRETs`);
           const apiResults = await apiStreaming.streamApiResults(allSirets, []);
           
           const allResults = baseResults.map(baseItem => {
@@ -267,23 +299,33 @@ export default function Home() {
           });
           
           setChecked(enrichWithAmounts(allResults, csvAmountMap));
+          setLoading(false); // Terminer le loading pour les petits scans
         } else {
           // Scinder en chunks de 250 SIRETs (optimisé HTTP/2 + API INSEE)
+          console.log(`📦 CRÉATION DES CHUNKS : ${allSirets.length} SIRETs > 250`);
           const chunks = createSiretChunks(allSirets);
           setSiretChunks(chunks);
           setCurrentChunkIndex(0);
           setChunkResults(new Array(chunks.length).fill(null));
           setChunkProcessing(new Array(chunks.length).fill(false));
           
-          console.log(`📦 Base scindée en ${chunks.length} chunks de max 250 SIRETs`);
-          console.log(`📊 Chunks: ${chunks.map((chunk, i) => `Chunk ${i+1}: ${chunk.length} SIRETs`).join(', ')}`);
+          console.log(`✅ ${chunks.length} chunks créés de max 250 SIRETs`);
+          console.log(`📊 Détail des chunks:`);
+          chunks.forEach((chunk, i) => {
+            console.log(`  - Chunk ${i+1}: ${chunk.length} SIRETs`);
+          });
+          
+          // Ne pas terminer le loading ici - les chunks doivent être traités manuellement
+          setLoading(false);
         }
+      } else {
+        console.log('⚠️ Aucun SIRET à vérifier');
+        setLoading(false); // Terminer le loading s'il n'y a pas de SIRETs
       }
 
     } catch (error) {
       console.error('Erreur lors du traitement de la base:', error);
-    } finally {
-      setLoading(false);
+      setLoading(false); // Terminer le loading en cas d'erreur
     }
   };
 
@@ -292,11 +334,43 @@ export default function Home() {
     console.log('[DEBUG] fileProcessing.rows.length:', fileProcessing.rows.length);
     console.log('[DEBUG] siretList.length:', siretList.length);
     console.log('[DEBUG] phoneList.length:', phoneList.length);
+    console.log('[DEBUG] manualSirets.length:', manualSirets.length);
     
-    // Si aucun fichier n'est chargé et aucun SIRET spécifique, on traite toute la base
-    if (fileProcessing.rows.length === 0 && siretList.length === 0 && phoneList.length === 0) {
+    // Si aucun fichier n'est chargé, aucun SIRET spécifique, et aucun SIRET manuel, on traite toute la base
+    if (fileProcessing.rows.length === 0 && siretList.length === 0 && phoneList.length === 0 && manualSirets.length === 0) {
       console.log('[DEBUG] Calling runBaseProcess...');
       return runBaseProcess();
+    }
+    
+    // Si des SIRETs manuels sont présents, les utiliser directement
+    if (manualSirets.length > 0 && fileProcessing.rows.length === 0) {
+      console.log('[DEBUG] 🔍 Recherche manuelle de SIRETs:', manualSirets.length);
+      setLoading(true);
+      apiStreaming.startScan();
+      setChecked(null);
+      
+      try {
+        // Vérifier directement les SIRETs manuels via l'API SIRENE
+        console.log('[DEBUG] ⏳ Appel streamApiResults pour recherche manuelle...');
+        const apiResults = await apiStreaming.streamApiResults(manualSirets, []);
+        console.log('[DEBUG] ✅ Résultats reçus:', apiResults.length);
+        console.log('[DEBUG] 📊 Détail des résultats:', apiResults.map(r => ({
+          siret: r.siret,
+          denomination: r.denomination,
+          estRadiee: r.estRadiee,
+          hasActiveProcedures: r.hasActiveProcedures
+        })));
+        
+        const enrichedResults = enrichWithAmounts(apiResults, csvAmountMap);
+        setChecked(enrichedResults);
+        
+        console.log('[DEBUG] 🏁 Recherche manuelle terminée');
+      } catch (error) {
+        console.error('Erreur lors de la vérification des SIRETs manuels:', error);
+      } finally {
+        setLoading(false);
+      }
+      return;
     }
     
     setLoading(true);
@@ -556,64 +630,78 @@ export default function Home() {
         </div>
         {/* CURSOR-style main interface - single card like CURSOR */}
         <div className="card-surface p-6 mb-6">
-          <div className="space-y-6">
-            {/* Configuration section */}
-            <StatusSelector 
-              enabledStatuses={enabledStatuses}
-              onStatusChange={setEnabledStatuses}
-            />
+          <Tabs defaultValue="base">
+            <TabsList>
+              <TabsTrigger value="base">Ensemble de sous-traitants</TabsTrigger>
+              <TabsTrigger value="search">Recherche SIRET/SIREN</TabsTrigger>
+              <TabsTrigger value="csv">Fichier CSV</TabsTrigger>
+            </TabsList>
 
-            {/* File upload section */}
-            <FileUploader
-              onFileProcessed={fileProcessing.processFile}
-              rows={fileProcessing.rows}
-              headerMap={fileProcessing.headerMap}
-              detectionType={fileProcessing.detectionType}
-              onHeaderMapChange={fileProcessing.setHeaderMap}
-            />
+            <TabsContent value="base">
+              <StatusSelector 
+                enabledStatuses={enabledStatuses}
+                onStatusChange={setEnabledStatuses}
+              />
+            </TabsContent>
+
+            <TabsContent value="search">
+              <SiretSearchBar
+                onSiretsChange={setManualSirets}
+              />
+            </TabsContent>
+
+            <TabsContent value="csv">
+              <FileUploader
+                onFileProcessed={fileProcessing.processFile}
+                rows={fileProcessing.rows}
+                headerMap={fileProcessing.headerMap}
+                detectionType={fileProcessing.detectionType}
+                onHeaderMapChange={fileProcessing.setHeaderMap}
+              />
+            </TabsContent>
+          </Tabs>
+          
+          {/* CURSOR-style action button - single prominent button */}
+          <div className="pt-4 border-t border-cursor-border-primary mt-6">
+            <button
+              onClick={runCompleteProcess}
+              disabled={loading}
+              className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="spinner-cursor"></div>
+                  <span>Analyse en cours...</span>
+                </>
+              ) : (
+                <span>Lancez l&apos;analyse</span>
+              )}
+            </button>
             
-            {/* CURSOR-style action button - single prominent button */}
-            <div className="pt-4 border-t border-cursor-border-primary">
-              <button
-                onClick={runCompleteProcess}
-                disabled={loading}
-                className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="spinner-cursor"></div>
-                    <span>Analyse en cours...</span>
-                  </>
-                ) : (
-                  <span>Lancez l&apos;analyse</span>
-                )}
-              </button>
-              
-              {/* Secondary actions - minimal like CURSOR */}
-              <div className="flex items-center justify-center gap-3 mt-3">
-                {apiStreaming.isScanning && (
-                  <button
-                    onClick={apiStreaming.stopScan}
-                    className="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors"
-                  >
-                    Arrêter
-                  </button>
-                )}
-                {checked && (
-                  <button
-                    onClick={resetProcess}
-                    disabled={loading}
-                    className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Réinitialiser
-                  </button>
-                )}
-              </div>
+            {/* Secondary actions - minimal like CURSOR */}
+            <div className="flex items-center justify-center gap-3 mt-3">
+              {apiStreaming.isScanning && (
+                <button
+                  onClick={apiStreaming.stopScan}
+                  className="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors"
+                >
+                  Arrêter
+                </button>
+              )}
+              {checked && (
+                <button
+                  onClick={resetProcess}
+                  disabled={loading}
+                  className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Réinitialiser
+                </button>
+              )}
             </div>
           </div>
 
           {/* CURSOR-style file info - minimal like CURSOR */}
-          {fileProcessing.rows.length > 0 && (
+          {(fileProcessing.rows.length > 0 || manualSirets.length > 0) && (
             <div className="mt-4">
               {/* Toggle button */}
               <button
@@ -627,7 +715,15 @@ export default function Home() {
               {showDetailedInfo && (
                 <div className="p-3 bg-cursor-bg-tertiary rounded border border-cursor-border-primary">
                   <div className="text-sm text-cursor-text-secondary space-y-1">
-                    {fileProcessing.detectionType === 'siret' && siretList.length > 0 ? (
+                    {manualSirets.length > 0 ? (
+                      <div>
+                        <span className="text-cursor-accent-green font-medium">
+                          {manualSirets.length} SIRET/SIREN saisi{manualSirets.length > 1 ? 's' : ''}
+                        </span>
+                        <br/>
+                        <span className="text-xs text-cursor-text-muted">Recherche manuelle</span>
+                      </div>
+                    ) : fileProcessing.detectionType === 'siret' && siretList.length > 0 ? (
                       <div>{siretList.length} SIRET détectés • Colonne: <span className="font-mono text-cursor-text-primary">
                         {fileProcessing.headerMap.siret?.startsWith('col_') 
                           ? `Colonne ${parseInt(fileProcessing.headerMap.siret.replace('col_', '')) + 1}` 
@@ -721,9 +817,14 @@ export default function Home() {
         {siretChunks.length > 0 && (
           <div className="card-surface p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-cursor-text-primary">Traitement par Chunks</h3>
-              <div className="text-sm text-cursor-text-secondary">
-                {siretChunks.length} chunks de max 250 SIRETs (optimisé HTTP/2 + API INSEE)
+              <div>
+                <h3 className="text-lg font-medium text-cursor-text-primary">Traitement par Chunks</h3>
+                <p className="text-sm text-cursor-text-secondary mt-1">
+                  {siretChunks.flat().length} SIRETs à vérifier • {siretChunks.length} chunk{siretChunks.length > 1 ? 's' : ''} de max 250
+                </p>
+              </div>
+              <div className="text-xs text-cursor-text-muted">
+                Optimisé HTTP/2 + API INSEE
               </div>
             </div>
             
@@ -735,9 +836,9 @@ export default function Home() {
                 
                 return (
                   <div key={index} className={`p-4 rounded-lg border ${
-                    isCurrent ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 
-                    isProcessed ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 
-                    'border-gray-300 bg-gray-50 dark:bg-gray-800 dark:border-gray-600'
+                    isCurrent ? 'border-blue-500 bg-blue-900/20' : 
+                    isProcessed ? 'border-green-500 bg-green-900/20' : 
+                    'border-cursor-border-primary bg-cursor-bg-secondary'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -750,16 +851,16 @@ export default function Home() {
                         </div>
                         <div>
                           <div className={`font-medium ${
-                            isCurrent ? 'text-blue-900 dark:text-blue-100' :
-                            isProcessed ? 'text-green-900 dark:text-green-100' :
-                            'text-gray-900 dark:text-gray-100'
+                            isCurrent ? 'text-blue-100' :
+                            isProcessed ? 'text-green-100' :
+                            'text-cursor-text-primary'
                           }`}>
                             Chunk {index + 1} - {chunk.length} SIRETs
                           </div>
                           <div className={`text-sm ${
-                            isCurrent ? 'text-blue-700 dark:text-blue-300' :
-                            isProcessed ? 'text-green-700 dark:text-green-300' :
-                            'text-gray-600 dark:text-gray-400'
+                            isCurrent ? 'text-blue-300' :
+                            isProcessed ? 'text-green-300' :
+                            'text-cursor-text-secondary'
                           }`}>
                             SIRETs {index * 250 + 1} à {Math.min((index + 1) * 250, siretChunks.flat().length)}
                           </div>
@@ -768,7 +869,7 @@ export default function Home() {
                       
                       <div className="flex items-center gap-2">
                         {isProcessed && (
-                          <div className="text-sm text-green-600 dark:text-green-400 font-medium">
+                          <div className="text-sm text-green-400 font-medium">
                             ✓ Terminé ({chunkResults[index]?.length || 0} résultats)
                           </div>
                         )}
@@ -783,13 +884,13 @@ export default function Home() {
                         )}
                         
                         {!isProcessed && !isProcessing && chunkProcessing.some(processing => processing) && (
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                          <div className="text-sm text-cursor-text-muted">
                             Un autre chunk est en cours de traitement
                           </div>
                         )}
                         
                         {isProcessing && (
-                          <div className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg text-sm">
+                          <div className="px-4 py-2 bg-blue-900 text-blue-300 rounded-lg text-sm">
                             Traitement...
                           </div>
                         )}
@@ -798,6 +899,28 @@ export default function Home() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* Info sur la base chargée */}
+        {checked && !apiStreaming.streamingProgress && siretChunks.length === 0 && stats && (
+          <div className="card-surface p-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-medium text-cursor-text-primary">Base chargée</h3>
+                <p className="text-sm text-cursor-text-secondary mt-1">
+                  {stats.current} entreprise{stats.current > 1 ? 's' : ''} chargée{stats.current > 1 ? 's' : ''} depuis la base sous-traitants
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-semibold text-blue-600">
+                  {stats.current}
+                </div>
+                <div className="text-xs text-cursor-text-muted">
+                  {stats.current <= 250 ? 'Scan auto en cours' : 'Prêt pour chunking'}
+                </div>
+              </div>
             </div>
           </div>
         )}

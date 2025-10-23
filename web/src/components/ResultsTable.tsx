@@ -16,6 +16,43 @@ export function ResultsTable({
   stats, 
   onExport 
 }: ResultsTableProps) {
+  // Si l'analyse est terminée et qu'il n'y a aucun résultat
+  const isAnalysisComplete = !streamingProgress && stats && stats.current > 0;
+  const hasNoResults = filtered.length === 0 && isAnalysisComplete;
+
+  // Debug logs
+  console.log('[ResultsTable DEBUG]', {
+    'filtered.length': filtered.length,
+    'streamingProgress': streamingProgress,
+    'stats': stats,
+    'isAnalysisComplete': isAnalysisComplete,
+    'hasNoResults': hasNoResults
+  });
+
+  if (hasNoResults) {
+    return (
+      <div className="mt-6">
+        <div className="card-surface rounded-lg p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-cursor-text-primary mb-1">
+                Tous vos sous-traitants sont en règle ✓
+              </h3>
+              <p className="text-cursor-text-secondary text-sm">
+                Sur les <span className="font-semibold text-cursor-text-primary">{stats?.current || 0}</span> entreprises analysées, aucune n&apos;est radiée ou en procédure collective.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-6">
       <div className="mb-4 flex items-center justify-between">
