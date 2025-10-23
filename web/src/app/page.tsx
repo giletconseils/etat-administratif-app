@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Papa from "papaparse";
 import * as XLSX from 'xlsx';
 
@@ -10,6 +10,7 @@ import {
   DEFAULT_ENABLED_STATUSES,
   SubcontractorData
 } from "@/lib/types";
+import { TreatmentType } from "@/lib/treatments/types";
 import { createAmountMap, enrichWithAmounts, calculateTotalAmount } from "../lib/amount-utils";
 import { useFileProcessing } from "@/lib/hooks/useFileProcessing";
 import { useApiStreaming } from "@/lib/hooks/useApiStreaming";
@@ -20,9 +21,15 @@ import { StatusSelector } from "@/components/StatusSelector";
 import { FileUploader } from "@/components/FileUploader";
 import { ResultsTable } from "@/components/ResultsTable";
 import { SiretSearchBar } from "@/components/SiretSearchBar";
+import { TreatmentSelector } from "@/components/TreatmentSelector";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import { Stepper, Step } from "@/components/ui/Stepper";
 
 export default function Home() {
+  // État du wizard
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [selectedTreatments, setSelectedTreatments] = useState<TreatmentType[]>(['radiation-check']);
+  
   // État principal
   const [checked, setChecked] = useState<Checked[] | null>(null);
   const [enabledStatuses, setEnabledStatuses] = useState<EnabledStatuses>(DEFAULT_ENABLED_STATUSES);
@@ -40,6 +47,39 @@ export default function Home() {
   const fileProcessing = useFileProcessing();
   const apiStreaming = useApiStreaming();
   const bodaccEnrichment = useBodaccEnrichment();
+
+  // Configuration des étapes du wizard
+  const wizardSteps: Step[] = [
+    { id: 1, label: 'Choix des données', description: 'Source de données' },
+    { id: 2, label: 'Traitement', description: 'Type d\'analyse' },
+    { id: 3, label: 'Résultats', description: 'Analyse terminée' }
+  ];
+
+  // Passer automatiquement à l'étape 3 quand les résultats sont prêts
+  const isAnalysisComplete = useMemo(() => {
+    // Vérifier que des résultats existent
+    const hasResults = checked !== null;
+    
+    // Vérifier qu'il n'y a pas de chargement en cours
+    const notLoading = !loading && !apiStreaming.streamingProgress;
+    
+    // Vérifier que tous les chunks sont traités (si applicable)
+    const allChunksProcessed = siretChunks.length === 0 || 
+      (siretChunks.length > 0 && chunkResults.filter(r => r !== null).length === siretChunks.length);
+    
+    // Vérifier qu'aucun chunk n'est en cours de traitement
+    const noChunkProcessing = !chunkProcessing.some(processing => processing);
+    
+    return hasResults && notLoading && allChunksProcessed && noChunkProcessing;
+  }, [checked, loading, apiStreaming.streamingProgress, siretChunks.length, chunkResults, chunkProcessing]);
+  
+  useEffect(() => {
+    if (isAnalysisComplete && currentStep === 2) {
+      // Petit délai pour une transition fluide
+      const timer = setTimeout(() => setCurrentStep(3), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isAnalysisComplete, currentStep]);
 
   // Calculs dérivés
   const siretList = useMemo(() => {
@@ -178,6 +218,31 @@ export default function Home() {
     setChunkResults([]);
     setChunkProcessing([]);
     setManualSirets([]);
+    setCurrentStep(1);
+  };
+
+  // Navigation du wizard
+  const canGoToStep2 = () => {
+    // Vérifier qu'au moins une source de données est sélectionnée
+    return manualSirets.length > 0 || fileProcessing.rows.length > 0 || true; // 'true' pour la base sous-traitants
+  };
+
+  const goToNextStep = () => {
+    if (currentStep === 1 && canGoToStep2()) {
+      setCurrentStep(2);
+    }
+  };
+
+  const goToPreviousStep = () => {
+    if (currentStep === 3) {
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      setCurrentStep(1);
+    }
+  };
+
+  const canRunAnalysis = () => {
+    return selectedTreatments.length > 0 && canGoToStep2();
   };
 
   // Fonction pour scinder les SIRETs en chunks optimisés pour la rapidité
@@ -331,10 +396,25 @@ export default function Home() {
 
   const runCompleteProcess = async () => {
     console.log('[DEBUG] runCompleteProcess called!');
+    console.log('[DEBUG] Selected treatments:', selectedTreatments);
     console.log('[DEBUG] fileProcessing.rows.length:', fileProcessing.rows.length);
     console.log('[DEBUG] siretList.length:', siretList.length);
     console.log('[DEBUG] phoneList.length:', phoneList.length);
     console.log('[DEBUG] manualSirets.length:', manualSirets.length);
+    
+    // Vérifier qu'au moins un traitement est sélectionné
+    if (selectedTreatments.length === 0) {
+      console.log('[DEBUG] No treatments selected');
+      alert('Veuillez sélectionner au moins un traitement');
+      return;
+    }
+    
+    // Pour l'instant, seul radiation-check est implémenté
+    if (!selectedTreatments.includes('radiation-check')) {
+      console.log('[DEBUG] Only radiation-check is implemented');
+      alert('Seul le traitement "Identifier les radiations / procédures" est actuellement disponible');
+      return;
+    }
     
     // Si aucun fichier n'est chargé, aucun SIRET spécifique, et aucun SIRET manuel, on traite toute la base
     if (fileProcessing.rows.length === 0 && siretList.length === 0 && phoneList.length === 0 && manualSirets.length === 0) {
@@ -617,156 +697,311 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-cursor-bg-primary">
-      <div className="mx-auto max-w-4xl px-6 py-8">
-        {/* Title section */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-cursor-text-primary mb-2">
-            Scan des sous-traitants
-          </h1>
-          <p className="text-cursor-text-secondary">
-            Analyse du statut administratif des entreprises
-          </p>
-        </div>
-        {/* CURSOR-style main interface - single card like CURSOR */}
-        <div className="card-surface p-6 mb-6">
-          <Tabs defaultValue="search">
-            <TabsList>
-              <TabsTrigger value="search">Recherche SIRET/SIREN</TabsTrigger>
-              <TabsTrigger value="base">Ensemble de sous-traitants</TabsTrigger>
-              <TabsTrigger value="csv">Fichier CSV</TabsTrigger>
-            </TabsList>
+    <div className="min-h-screen bg-cursor-bg-primary flex">
+      {/* Sidebar fixe avec style professionnel */}
+      <aside className="w-80 bg-gradient-to-b from-[#1e1e1e] via-[#1a1a1a] to-[#161616] border-r border-[#2a2a2a] fixed left-0 top-0 h-screen overflow-y-auto shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+        <div className="p-6">
+          {/* Title section avec séparateur élégant */}
+          <div className="mb-8 pb-5 relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-cursor-text-primary leading-tight">
+                  Analyse d&apos;entreprises
+                </h1>
+              </div>
+            </div>
+            <p className="text-xs text-cursor-text-secondary leading-relaxed pl-12">
+              Traitements et vérifications administratives
+            </p>
+            {/* Séparateur élégant avec dégradé */}
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#2a2a2a] to-transparent"></div>
+          </div>
 
-            <TabsContent value="search">
-              <SiretSearchBar
-                onSiretsChange={setManualSirets}
+          {/* Stepper avec design moderne */}
+          <div className="mb-6">
+            <h2 className="text-xs font-semibold text-cursor-text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
+              <div className="w-1 h-3 bg-blue-500 rounded-full"></div>
+              Progression
+            </h2>
+            <div className="relative bg-[#1a1a1a] p-4 rounded-xl border border-[#2a2a2a] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <Stepper 
+                steps={wizardSteps} 
+                currentStep={currentStep}
+                onStepClick={setCurrentStep}
               />
-            </TabsContent>
-
-            <TabsContent value="base">
-              <StatusSelector 
-                enabledStatuses={enabledStatuses}
-                onStatusChange={setEnabledStatuses}
-              />
-            </TabsContent>
-
-            <TabsContent value="csv">
-              <FileUploader
-                onFileProcessed={fileProcessing.processFile}
-                rows={fileProcessing.rows}
-                headerMap={fileProcessing.headerMap}
-                detectionType={fileProcessing.detectionType}
-                onHeaderMapChange={fileProcessing.setHeaderMap}
-              />
-            </TabsContent>
-          </Tabs>
-          
-          {/* CURSOR-style action button - single prominent button */}
-          <div className="pt-4 border-t border-cursor-border-primary mt-6">
-            <button
-              onClick={runCompleteProcess}
-              disabled={loading}
-              className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="spinner-cursor"></div>
-                  <span>Analyse en cours...</span>
-                </>
-              ) : (
-                <span>Lancez l&apos;analyse</span>
-              )}
-            </button>
-            
-            {/* Secondary actions - minimal like CURSOR */}
-            <div className="flex items-center justify-center gap-3 mt-3">
-              {apiStreaming.isScanning && (
-                <button
-                  onClick={apiStreaming.stopScan}
-                  className="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors"
-                >
-                  Arrêter
-                </button>
-              )}
-              {checked && (
-                <button
-                  onClick={resetProcess}
-                  disabled={loading}
-                  className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Réinitialiser
-                </button>
-              )}
             </div>
           </div>
 
-          {/* CURSOR-style file info - minimal like CURSOR */}
-          {(fileProcessing.rows.length > 0 || manualSirets.length > 0) && (
-            <div className="mt-4">
-              {/* Toggle button */}
-              <button
-                onClick={() => setShowDetailedInfo(!showDetailedInfo)}
-                className="text-sm text-cursor-text-secondary hover:text-cursor-text-primary transition-colors mb-2"
-              >
-                {showDetailedInfo ? '▼' : '▶'} Voir plus d&apos;information
-              </button>
-              
-              {/* Detailed info section - collapsible */}
-              {showDetailedInfo && (
-                <div className="p-3 bg-cursor-bg-tertiary rounded border border-cursor-border-primary">
-                  <div className="text-sm text-cursor-text-secondary space-y-1">
-                    {manualSirets.length > 0 ? (
-                      <div>
-                        <span className="text-cursor-accent-green font-medium">
-                          {manualSirets.length} SIRET/SIREN saisi{manualSirets.length > 1 ? 's' : ''}
-                        </span>
-                        <br/>
-                        <span className="text-xs text-cursor-text-muted">Recherche manuelle</span>
-                      </div>
-                    ) : fileProcessing.detectionType === 'siret' && siretList.length > 0 ? (
-                      <div>{siretList.length} SIRET détectés • Colonne: <span className="font-mono text-cursor-text-primary">
-                        {fileProcessing.headerMap.siret?.startsWith('col_') 
-                          ? `Colonne ${parseInt(fileProcessing.headerMap.siret.replace('col_', '')) + 1}` 
-                          : fileProcessing.headerMap.siret}
-                      </span></div>
-                    ) : fileProcessing.detectionType === 'phone' && phoneList.length > 0 ? (
-                      <div>
-                        {phoneList.length} numéros détectés • Colonne: <span className="font-mono text-cursor-text-primary">
-                          {fileProcessing.headerMap.siret?.startsWith('col_') 
-                            ? `Colonne ${parseInt(fileProcessing.headerMap.siret.replace('col_', '')) + 1}` 
-                            : fileProcessing.headerMap.siret}
-                        </span>
-                        <br/>
-                        <span className="text-xs text-cursor-text-muted">Jointure avec la base pour enrichir les SIRETs</span>
-                      </div>
-                    ) : (
-                      <div className="text-cursor-text-muted">
-                        Aucune donnée valide détectée dans <span className="font-mono">
-                          {fileProcessing.headerMap.siret?.startsWith('col_') 
-                            ? `Colonne ${parseInt(fileProcessing.headerMap.siret.replace('col_', '')) + 1}` 
-                            : fileProcessing.headerMap.siret}
-                        </span>
-                      </div>
-                    )}
-                    
-                    {fileProcessing.headerMap.montant && (
-                      <div>
-                        Colonne montant: <span className="font-mono text-cursor-text-primary">
-                          {fileProcessing.headerMap.montant.startsWith('col_') 
-                            ? `Colonne ${parseInt(fileProcessing.headerMap.montant.replace('col_', '')) + 1}` 
-                            : fileProcessing.headerMap.montant}
-                        </span> • <span className="text-cursor-accent-green">Calcul automatique activé</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+          {/* Indicateur d'étape actuelle avec design glassmorphism */}
+          <div className="mt-8 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 via-blue-600/5 to-transparent border border-blue-500/20 shadow-[inset_0_1px_0_rgba(59,130,246,0.1)] backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+              <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide">Étape actuelle</span>
             </div>
-          )}
+            <p className="text-sm text-cursor-text-primary font-medium">
+              {wizardSteps.find(s => s.id === currentStep)?.label || 'En cours'}
+            </p>
+            <p className="text-xs text-cursor-text-secondary mt-1">
+              {wizardSteps.find(s => s.id === currentStep)?.description}
+            </p>
+            
+            {/* Informations de vérification en cours */}
+            {apiStreaming.streamingProgress && (
+              <div className="mt-4 pt-3 relative">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-cursor-text-secondary">Progression</span>
+                  <span className="text-xs font-semibold text-blue-400 tabular-nums">
+                    {apiStreaming.streamingProgress.current} / {apiStreaming.streamingProgress.total}
+                  </span>
+                </div>
+                <div className="w-full bg-[#1a1a1a] rounded-full h-1.5 mb-2 overflow-hidden border border-[#2a2a2a]">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                    style={{ width: `${(apiStreaming.streamingProgress.current / apiStreaming.streamingProgress.total) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-cursor-text-muted truncate" title={apiStreaming.streamingProgress.message}>
+                  {apiStreaming.streamingProgress.message}
+                </p>
+              </div>
+            )}
+            
+            {/* Informations de traitement par chunks */}
+            {siretChunks.length > 0 && (
+              <div className="mt-4 pt-3 relative">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-cursor-text-secondary">Chunks</span>
+                  <span className="text-xs font-semibold text-blue-400 tabular-nums">
+                    {chunkResults.filter(r => r !== null).length} / {siretChunks.length}
+                  </span>
+                </div>
+                <div className="w-full bg-[#1a1a1a] rounded-full h-1.5 mb-1 overflow-hidden border border-[#2a2a2a]">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 to-blue-400 h-1.5 rounded-full transition-all duration-300 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                    style={{ width: `${(chunkResults.filter(r => r !== null).length / siretChunks.length) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-cursor-text-muted tabular-nums">
+                  {siretChunks.flat().length} SIRETs au total
+                </p>
+              </div>
+            )}
+          </div>
         </div>
+      </aside>
 
-        {/* Statistiques BODACC */}
-        {bodaccEnrichment.enrichmentStats && (
+      {/* Contenu principal avec margin-left pour compenser la sidebar */}
+      <div className="flex-1 ml-80">
+        <div className="mx-auto max-w-4xl px-6 py-8">
+
+        {/* Step 1: Data Selection */}
+        {currentStep === 1 && (
+          <div className="card-surface p-6 mb-6">
+            <Tabs defaultValue="search">
+              <TabsList>
+                <TabsTrigger value="search">Recherche SIRET/SIREN</TabsTrigger>
+                <TabsTrigger value="base">Ensemble de sous-traitants</TabsTrigger>
+                <TabsTrigger value="csv">Fichier CSV</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="search">
+                <SiretSearchBar
+                  onSiretsChange={setManualSirets}
+                />
+              </TabsContent>
+
+              <TabsContent value="base">
+                <StatusSelector 
+                  enabledStatuses={enabledStatuses}
+                  onStatusChange={setEnabledStatuses}
+                />
+              </TabsContent>
+
+              <TabsContent value="csv">
+                <FileUploader
+                  onFileProcessed={fileProcessing.processFile}
+                  rows={fileProcessing.rows}
+                  headerMap={fileProcessing.headerMap}
+                  detectionType={fileProcessing.detectionType}
+                  onHeaderMapChange={fileProcessing.setHeaderMap}
+                />
+              </TabsContent>
+            </Tabs>
+            
+            {/* Navigation buttons for step 1 */}
+            <div className="pt-4 border-t border-cursor-border-primary mt-6">
+              <button
+                onClick={goToNextStep}
+                disabled={!canGoToStep2()}
+                className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <span>Suivant : Choisir les traitements</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* CURSOR-style file info - minimal like CURSOR */}
+            {(fileProcessing.rows.length > 0 || manualSirets.length > 0) && (
+              <div className="mt-4">
+                {/* Toggle button */}
+                <button
+                  onClick={() => setShowDetailedInfo(!showDetailedInfo)}
+                  className="text-sm text-cursor-text-secondary hover:text-cursor-text-primary transition-colors mb-2"
+                >
+                  {showDetailedInfo ? '▼' : '▶'} Voir plus d&apos;information
+                </button>
+                
+                {/* Detailed info section - collapsible */}
+                {showDetailedInfo && (
+                  <div className="p-3 bg-cursor-bg-tertiary rounded border border-cursor-border-primary">
+                    <div className="text-sm text-cursor-text-secondary space-y-1">
+                      {manualSirets.length > 0 ? (
+                        <div>
+                          <span className="text-cursor-accent-green font-medium">
+                            {manualSirets.length} SIRET/SIREN saisi{manualSirets.length > 1 ? 's' : ''}
+                          </span>
+                          <br/>
+                          <span className="text-xs text-cursor-text-muted">Recherche manuelle</span>
+                        </div>
+                      ) : fileProcessing.detectionType === 'siret' && siretList.length > 0 ? (
+                        <div>{siretList.length} SIRET détectés • Colonne: <span className="font-mono text-cursor-text-primary">
+                          {fileProcessing.headerMap.siret?.startsWith('col_') 
+                            ? `Colonne ${parseInt(fileProcessing.headerMap.siret.replace('col_', '')) + 1}` 
+                            : fileProcessing.headerMap.siret}
+                        </span></div>
+                      ) : fileProcessing.detectionType === 'phone' && phoneList.length > 0 ? (
+                        <div>
+                          {phoneList.length} numéros détectés • Colonne: <span className="font-mono text-cursor-text-primary">
+                            {fileProcessing.headerMap.siret?.startsWith('col_') 
+                              ? `Colonne ${parseInt(fileProcessing.headerMap.siret.replace('col_', '')) + 1}` 
+                              : fileProcessing.headerMap.siret}
+                          </span>
+                          <br/>
+                          <span className="text-xs text-cursor-text-muted">Jointure avec la base pour enrichir les SIRETs</span>
+                        </div>
+                      ) : (
+                        <div className="text-cursor-text-muted">
+                          Aucune donnée valide détectée dans <span className="font-mono">
+                            {fileProcessing.headerMap.siret?.startsWith('col_') 
+                              ? `Colonne ${parseInt(fileProcessing.headerMap.siret.replace('col_', '')) + 1}` 
+                              : fileProcessing.headerMap.siret}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {fileProcessing.headerMap.montant && (
+                        <div>
+                          Colonne montant: <span className="font-mono text-cursor-text-primary">
+                            {fileProcessing.headerMap.montant.startsWith('col_') 
+                              ? `Colonne ${parseInt(fileProcessing.headerMap.montant.replace('col_', '')) + 1}` 
+                              : fileProcessing.headerMap.montant}
+                          </span> • <span className="text-cursor-accent-green">Calcul automatique activé</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 2: Treatment Selection */}
+        {currentStep === 2 && (
+          <div className="card-surface p-6 mb-6">
+            <TreatmentSelector
+              selectedTreatments={selectedTreatments}
+              onSelectionChange={setSelectedTreatments}
+            />
+            
+            {/* Navigation and action buttons for step 2 */}
+            <div className="pt-4 border-t border-cursor-border-primary mt-6 space-y-3">
+              {/* Main action button */}
+              <button
+                onClick={runCompleteProcess}
+                disabled={loading || !canRunAnalysis()}
+                className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="spinner-cursor"></div>
+                    <span>Analyse en cours...</span>
+                  </>
+                ) : (
+                  <span>Lancer l&apos;analyse</span>
+                )}
+              </button>
+
+              {/* Secondary actions */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={goToPreviousStep}
+                  disabled={loading}
+                  className="text-sm text-cursor-text-secondary hover:text-cursor-text-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span>Retour aux données</span>
+                </button>
+
+                <div className="flex items-center gap-3">
+                  {apiStreaming.isScanning && (
+                    <button
+                      onClick={apiStreaming.stopScan}
+                      className="text-sm text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded transition-colors"
+                    >
+                      Arrêter
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Results */}
+        {currentStep === 3 && (
+          <div className="card-surface p-6 mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-cursor-text-primary">Analyse terminée</h2>
+                <p className="text-sm text-cursor-text-secondary">
+                  Les résultats sont maintenant disponibles ci-dessous
+                </p>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-cursor-border-primary mt-4">
+              <button
+                onClick={resetProcess}
+                className="w-full text-white bg-blue-600 hover:bg-blue-700 font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Nouvelle analyse</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Statistiques BODACC - visible dès qu'il y a des stats */}
+        {(currentStep === 2 || currentStep === 3) && bodaccEnrichment.enrichmentStats && (
           <div className="card-surface p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium text-cursor-text-primary">Enrichissement BODACC</h3>
@@ -813,8 +1048,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* Interface de traitement par chunks */}
-        {siretChunks.length > 0 && (
+        {/* Interface de traitement par chunks - visible à l'étape 2 et 3 */}
+        {(currentStep === 2 || currentStep === 3) && siretChunks.length > 0 && (
           <div className="card-surface p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -903,8 +1138,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* Info sur la base chargée */}
-        {checked && !apiStreaming.streamingProgress && siretChunks.length === 0 && stats && (
+        {/* Info sur la base chargée - visible à l'étape 2 et 3 */}
+        {(currentStep === 2 || currentStep === 3) && checked && !apiStreaming.streamingProgress && siretChunks.length === 0 && stats && (
           <div className="card-surface p-6 mb-6">
             <div className="flex items-center justify-between">
               <div>
@@ -925,35 +1160,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* CURSOR-style streaming progress */}
-        {apiStreaming.streamingProgress && (
-          <div className="card-surface p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-cursor-text-primary">Vérification en cours</h3>
-              <div className="flex items-center gap-3">
-                <div className="text-sm text-cursor-text-secondary">
-                  {apiStreaming.streamingProgress.current} / {apiStreaming.streamingProgress.total}
-                </div>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 border-2 border-cursor-text-secondary border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-sm text-cursor-text-secondary">{apiStreaming.streamingProgress.message}</span>
-              </div>
-              <div className="w-full bg-cursor-bg-tertiary rounded-full h-2">
-                <div 
-                  className="bg-cursor-accent-blue h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(apiStreaming.streamingProgress.current / apiStreaming.streamingProgress.total) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        )}
-
-
-        {/* CURSOR-style total amount card */}
-        {fileProcessing.headerMap.montant && filtered.length > 0 && (
+        {/* CURSOR-style total amount card - visible dès qu'il y a des résultats */}
+        {(currentStep === 2 || currentStep === 3) && fileProcessing.headerMap.montant && filtered.length > 0 && (
           <div className="card-surface p-6 mb-6">
             <div className="flex items-center justify-between">
               <div>
@@ -982,16 +1190,18 @@ export default function Home() {
           </div>
         )}
 
-        {/* Tableau des résultats */}
-        {(checked || apiStreaming.streamingResults.length > 0) && (
+        {/* Tableau des résultats - visible dès qu'il y a des résultats (étape 2 et 3) */}
+        {(currentStep === 2 || currentStep === 3) && (checked || apiStreaming.streamingResults.length > 0) && (
           <ResultsTable
             filtered={filtered}
             headerMap={fileProcessing.headerMap}
             streamingProgress={apiStreaming.streamingProgress}
             stats={stats}
             onExport={exportToExcel}
+            activeTreatments={selectedTreatments}
           />
         )}
+        </div>
       </div>
     </div>
   );

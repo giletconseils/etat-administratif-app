@@ -1,0 +1,143 @@
+import React from 'react';
+
+export interface Step {
+  id: number;
+  label: string;
+  description?: string;
+}
+
+interface StepperProps {
+  steps: Step[];
+  currentStep: number;
+  onStepClick?: (stepId: number) => void;
+}
+
+export function Stepper({ steps, currentStep, onStepClick }: StepperProps) {
+  return (
+    <div className="w-full py-4">
+      {/* Version verticale pour sidebar */}
+      <div className="flex flex-col space-y-3">
+        {steps.map((step, index) => {
+          const isCompleted = step.id < currentStep;
+          const isCurrent = step.id === currentStep;
+          const isClickable = onStepClick && (isCompleted || isCurrent);
+          
+          return (
+            <React.Fragment key={step.id}>
+              <div className="flex items-start gap-4 group">
+                {/* Step circle with enhanced animations */}
+                <div className="relative flex-shrink-0">
+                  {/* Animated ring for current step - subtil */}
+                  {isCurrent && (
+                    <>
+                      <div className="absolute -inset-1.5 rounded-full bg-blue-500/20 animate-stepper-ping" />
+                      <div className="absolute -inset-0.5 rounded-full bg-blue-500/10 animate-pulse" />
+                    </>
+                  )}
+                  
+                  <button
+                    onClick={() => isClickable && onStepClick(step.id)}
+                    disabled={!isClickable}
+                    className={`
+                      relative w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm
+                      transition-all duration-300 ease-out
+                      ${isCompleted 
+                        ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-md shadow-green-500/20' 
+                        : isCurrent 
+                          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105' 
+                          : 'bg-cursor-bg-tertiary text-cursor-text-muted border-2 border-cursor-border-primary'
+                      }
+                      ${isClickable ? 'cursor-pointer hover:scale-110 hover:shadow-xl active:scale-100' : 'cursor-default'}
+                    `}
+                  >
+                    {isCompleted ? (
+                      <svg 
+                        className="w-5 h-5 animate-in fade-in zoom-in duration-300" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={3} 
+                          d="M5 13l4 4L19 7" 
+                        />
+                      </svg>
+                    ) : (
+                      <span className={`transition-all duration-300 ${isCurrent ? 'scale-105' : ''}`}>
+                        {step.id}
+                      </span>
+                    )}
+                  </button>
+                </div>
+                
+                {/* Step label with fade animation */}
+                <div className={`
+                  flex-1 pt-2 transition-all duration-300
+                  ${isCurrent ? 'translate-x-0 opacity-100' : 'translate-x-0 opacity-90'}
+                `}>
+                  <div className={`
+                    text-base font-semibold transition-all duration-300
+                    ${isCurrent 
+                      ? 'text-cursor-text-primary scale-105' 
+                      : isCompleted
+                        ? 'text-cursor-text-secondary'
+                        : 'text-cursor-text-muted'
+                    }
+                  `}>
+                    {step.label}
+                  </div>
+                  {step.description && (
+                    <div className={`
+                      text-sm mt-1 transition-all duration-300
+                      ${isCurrent 
+                        ? 'text-cursor-text-secondary opacity-100' 
+                        : 'text-cursor-text-muted opacity-75'
+                      }
+                    `}>
+                      {step.description}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Animated connector line verticale */}
+              {index < steps.length - 1 && (
+                <div className="flex items-center">
+                  <div className="w-10 flex justify-center">
+                    <div className="relative w-0.5 h-6">
+                      {/* Background line */}
+                      <div className="absolute inset-0 bg-cursor-border-primary rounded-full" />
+                      
+                      {/* Animated progress line */}
+                      <div 
+                        className={`
+                          absolute inset-0 rounded-full transition-all duration-700 ease-out
+                          ${isCompleted 
+                            ? 'bg-gradient-to-b from-green-500 to-green-600 shadow-sm shadow-green-500/20 scale-y-100' 
+                            : 'bg-gradient-to-b from-blue-500 to-blue-600 scale-y-0'
+                          }
+                          origin-top
+                        `}
+                        style={{
+                          transform: isCompleted ? 'scaleY(1)' : 'scaleY(0)',
+                        }}
+                      />
+                      
+                      {/* Shimmer effect on active line - subtil */}
+                      {isCompleted && (
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/20 to-transparent animate-shimmer" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+

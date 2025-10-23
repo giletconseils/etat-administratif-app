@@ -98,6 +98,9 @@ const config: Config = {
         'fade-in': 'fadeIn 0.2s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',
         'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'stepper-ping': 'stepperPing 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+        'stepper-glow': 'stepperGlow 3s ease-in-out infinite',
+        'shimmer': 'shimmer 2s infinite',
       },
       keyframes: {
         fadeIn: {
@@ -107,6 +110,19 @@ const config: Config = {
         slideUp: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        stepperPing: {
+          '0%': { transform: 'scale(1)', opacity: '0.8' },
+          '50%': { transform: 'scale(1.3)', opacity: '0.4' },
+          '100%': { transform: 'scale(1.6)', opacity: '0' },
+        },
+        stepperGlow: {
+          '0%, 100%': { opacity: '0.3' },
+          '50%': { opacity: '0.6' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
         },
       },
     },

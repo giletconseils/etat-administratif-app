@@ -1,5 +1,7 @@
 // Types partagés pour l'application
 
+import { TreatmentType } from './treatments/types';
+
 export type CsvRow = Record<string, string>;
 
 export type Checked = { 
@@ -12,11 +14,14 @@ export type Checked = {
   status_reseau?: string;
   fichier_source?: string;
   montant?: number;
-  // Nouvelles propriétés pour les procédures BODACC
+  // Nouvelles propriétés pour les procédures BODACC (radiation-check treatment)
   procedure?: string;
   procedureType?: string;
   hasActiveProcedures?: boolean;
   bodaccError?: string;
+  // Treatment tracking
+  treatments?: TreatmentType[];
+  treatmentResults?: Record<string, unknown>;
 };
 
 export type HeaderMap = { 
