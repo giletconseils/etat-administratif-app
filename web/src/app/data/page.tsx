@@ -15,6 +15,16 @@ interface Assureur {
   ri_percentage: number;
 }
 
+interface RIThresholds {
+  warningThreshold: number;
+  excellentThreshold: number;
+}
+
+const DEFAULT_RI_THRESHOLDS: RIThresholds = {
+  warningThreshold: -20,
+  excellentThreshold: 10,
+};
+
 // Helper function to format dates
 function formatDate(dateString?: string) {
   if (!dateString) return "—";
@@ -24,9 +34,11 @@ function formatDate(dateString?: string) {
 export default function DataPage() {
   const [datasets, setDatasets] = useState<DatasetInfo[]>([]);
   const [assureurs, setAssureurs] = useState<Assureur[]>([]);
+  const [riThresholds, setRiThresholds] = useState<RIThresholds>(DEFAULT_RI_THRESHOLDS);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingThresholds, setSavingThresholds] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const loadData = useCallback(async () => {
@@ -42,6 +54,11 @@ export default function DataPage() {
       const assureursRes = await fetch("/api/data/assureurs");
       const assureursData = await assureursRes.json();
       setAssureurs(assureursData.assureurs || []);
+
+      // Load RI thresholds
+      const thresholdsRes = await fetch("/api/data/ri-thresholds");
+      const thresholdsData = await thresholdsRes.json();
+      setRiThresholds(thresholdsData.thresholds || DEFAULT_RI_THRESHOLDS);
     } catch (error) {
       console.error("Error loading data:", error);
       setMessage({ type: "error", text: "Erreur lors du chargement des données" });
@@ -155,6 +172,45 @@ export default function DataPage() {
     ];
 
     setAssureurs(defaultAssureurs);
+  };
+
+  const handleSaveRIThresholds = async () => {
+    try {
+      setSavingThresholds(true);
+      setMessage(null);
+
+      const response = await fetch("/api/data/ri-thresholds", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ thresholds: riThresholds }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Save failed");
+      }
+
+      setMessage({
+        type: "success",
+        text: "Seuils RI mis à jour avec succès",
+      });
+    } catch (error) {
+      console.error("Save error:", error);
+      setMessage({
+        type: "error",
+        text: `Erreur lors de la sauvegarde: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    } finally {
+      setSavingThresholds(false);
+    }
+  };
+
+  const handleResetRIThresholds = () => {
+    if (!confirm("Réinitialiser les seuils RI aux valeurs par défaut (-20% / +10%) ?")) {
+      return;
+    }
+    setRiThresholds(DEFAULT_RI_THRESHOLDS);
   };
 
   const getDatasetInfo = (type: string) => {
@@ -298,6 +354,137 @@ export default function DataPage() {
               className="text-cursor-text-primary bg-cursor-bg-tertiary hover:bg-cursor-bg-secondary border border-cursor-border-primary font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Réinitialiser aux valeurs par défaut
+            </button>
+          </div>
+        </div>
+
+        {/* Section Seuils de détection des anomalies RI */}
+        <div className="card-surface p-6 mb-6">
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              <h2 className="text-xl font-semibold text-cursor-text-primary">
+                Seuils de détection des anomalies RI
+              </h2>
+            </div>
+            <p className="text-sm text-cursor-text-secondary">
+              Configurez les seuils pour catégoriser les écarts entre RI théorique et RI déclaré
+            </p>
+          </div>
+
+          <div className="space-y-6 mb-6">
+            {/* Seuil de sous-déclaration */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium text-cursor-text-primary">
+                  Seuil de sous-déclaration (écart négatif)
+                </label>
+                <span className="text-2xl font-bold text-red-400 tabular-nums">
+                  {riThresholds.warningThreshold}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-50"
+                max="0"
+                step="1"
+                value={riThresholds.warningThreshold}
+                onChange={(e) =>
+                  setRiThresholds((prev) => ({
+                    ...prev,
+                    warningThreshold: parseInt(e.target.value, 10),
+                  }))
+                }
+                className="w-full h-2 bg-gradient-to-r from-red-600 to-gray-600 rounded-lg appearance-none cursor-pointer slider-thumb-red"
+                style={{
+                  background: `linear-gradient(to right, #dc2626 0%, #dc2626 ${
+                    ((riThresholds.warningThreshold + 50) / 50) * 100
+                  }%, #4b5563 ${((riThresholds.warningThreshold + 50) / 50) * 100}%, #4b5563 100%)`,
+                }}
+              />
+              <p className="text-xs text-cursor-text-muted mt-2">
+                Les entreprises avec un écart inférieur à {riThresholds.warningThreshold}% seront marquées en sous-déclaration
+              </p>
+            </div>
+
+            {/* Seuil d'excellence */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-sm font-medium text-cursor-text-primary">
+                  Seuil d&apos;excellence (écart positif)
+                </label>
+                <span className="text-2xl font-bold text-blue-400 tabular-nums">
+                  +{riThresholds.excellentThreshold}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                step="1"
+                value={riThresholds.excellentThreshold}
+                onChange={(e) =>
+                  setRiThresholds((prev) => ({
+                    ...prev,
+                    excellentThreshold: parseInt(e.target.value, 10),
+                  }))
+                }
+                className="w-full h-2 bg-gradient-to-r from-gray-600 to-blue-600 rounded-lg appearance-none cursor-pointer slider-thumb-blue"
+                style={{
+                  background: `linear-gradient(to right, #4b5563 0%, #4b5563 ${
+                    (riThresholds.excellentThreshold / 50) * 100
+                  }%, #2563eb ${(riThresholds.excellentThreshold / 50) * 100}%, #2563eb 100%)`,
+                }}
+              />
+              <p className="text-xs text-cursor-text-muted mt-2">
+                Les entreprises avec un écart supérieur à +{riThresholds.excellentThreshold}% seront marquées comme excellentes
+              </p>
+            </div>
+          </div>
+
+          {/* Aperçu des catégories */}
+          <div className="bg-cursor-bg-tertiary border border-cursor-border-primary rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-semibold text-cursor-text-primary mb-3">
+              Aperçu des catégories
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span className="text-sm text-cursor-text-secondary">
+                  Sous-déclaration : Écart &lt; {riThresholds.warningThreshold}%
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="text-sm text-cursor-text-secondary">
+                  Conforme : {riThresholds.warningThreshold}% ≤ Écart ≤ +{riThresholds.excellentThreshold}%
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-sm text-cursor-text-secondary">
+                  Excellent : Écart &gt; +{riThresholds.excellentThreshold}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleSaveRIThresholds}
+              disabled={savingThresholds}
+              className="text-white bg-blue-600 hover:bg-blue-700 font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingThresholds ? "Sauvegarde..." : "Sauvegarder les seuils"}
+            </button>
+            <button
+              onClick={handleResetRIThresholds}
+              disabled={savingThresholds}
+              className="text-cursor-text-primary bg-cursor-bg-tertiary hover:bg-cursor-bg-secondary border border-cursor-border-primary font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Réinitialiser aux valeurs par défaut (-20% / +10%)
             </button>
           </div>
         </div>

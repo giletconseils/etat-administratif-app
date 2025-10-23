@@ -20,5 +20,6 @@ export interface RadiationCheckFindings {
   procedureType?: string;
   denomination?: string;
   bodaccError?: string;
+  [key: string]: unknown; // Index signature for compatibility with Record<string, unknown>
 }
 

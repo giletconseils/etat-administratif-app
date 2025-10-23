@@ -40,7 +40,8 @@ export default function AnalysePage() {
   );
   const [currentTab, setCurrentTab] = useState<string>('search');
   const [minMissions, setMinMissions] = useState<number>(5); // Pour le mode batch RI
-  const [riThresholds, setRiThresholds] = useState<RIThresholds>(DEFAULT_RI_THRESHOLDS); // Seuils RI personnalisables
+  const [riThresholds, setRiThresholds] = useState<RIThresholds>(DEFAULT_RI_THRESHOLDS); // Seuils RI chargés depuis l'API
+  const [thresholdsLoaded, setThresholdsLoaded] = useState(false);
   
   // État principal
   const [checked, setChecked] = useState<Checked[] | null>(null);
@@ -89,6 +90,28 @@ export default function AnalysePage() {
     return hasResults && notLoading && allChunksProcessed && noChunkProcessing;
   }, [checked, riAnomalyResults, loading, apiStreaming.streamingProgress, siretChunks.length, chunkResults, chunkProcessing]);
   
+  // Charger les seuils RI depuis l'API au montage du composant
+  useEffect(() => {
+    const loadRIThresholds = async () => {
+      try {
+        const response = await fetch('/api/data/ri-thresholds');
+        const data = await response.json();
+        if (data.success && data.thresholds) {
+          setRiThresholds(data.thresholds);
+        }
+      } catch (error) {
+        console.error('Error loading RI thresholds:', error);
+        // Keep default values if loading fails
+      } finally {
+        setThresholdsLoaded(true);
+      }
+    };
+
+    if (selectedTreatments[0] === 'ri-anomalies' && !thresholdsLoaded) {
+      loadRIThresholds();
+    }
+  }, [selectedTreatments, thresholdsLoaded]);
+
   useEffect(() => {
     if (isAnalysisComplete && currentStep === 2) {
       // Petit délai pour une transition fluide
@@ -890,9 +913,6 @@ export default function AnalysePage() {
                   <TabsTrigger value="search">Recherche SIRET/SIREN</TabsTrigger>
                   <TabsTrigger value="base">Ensemble de sous-traitants</TabsTrigger>
                   <TabsTrigger value="csv">Fichier CSV</TabsTrigger>
-                  {selectedTreatments[0] === 'ri-anomalies' && (
-                    <TabsTrigger value="params">Paramètres</TabsTrigger>
-                  )}
                 </TabsList>
 
                 <TabsContent value="search">
@@ -962,106 +982,6 @@ export default function AnalysePage() {
                     onHeaderMapChange={fileProcessing.setHeaderMap}
                   />
                 </TabsContent>
-
-                {/* Onglet Paramètres pour RI anomalies */}
-                {selectedTreatments[0] === 'ri-anomalies' && (
-                  <TabsContent value="params">
-                    <div className="space-y-6">
-                      <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                        <div className="flex items-center gap-2 mb-3">
-                          <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                          </svg>
-                          <h3 className="text-sm font-semibold text-cursor-text-primary">Seuils de détection des anomalies</h3>
-                        </div>
-                        <p className="text-xs text-cursor-text-muted mb-4">
-                          Configurez les seuils pour catégoriser les écarts entre RI théorique et RI déclaré
-                        </p>
-
-                        {/* Seuil sous-déclaration */}
-                        <div className="mb-6">
-                          <label className="block text-sm font-medium text-cursor-text-primary mb-3">
-                            Seuil de sous-déclaration (écart négatif)
-                          </label>
-                          <div className="flex items-center gap-4">
-                            <input
-                              type="range"
-                              min="-50"
-                              max="0"
-                              step="1"
-                              value={riThresholds.warningThreshold}
-                              onChange={(e) => setRiThresholds({...riThresholds, warningThreshold: parseInt(e.target.value)})}
-                              className="flex-1 h-2 bg-cursor-bg-tertiary rounded-lg appearance-none cursor-pointer slider-cursor"
-                              style={{
-                                background: `linear-gradient(to right, #EF4444 0%, #EF4444 ${((riThresholds.warningThreshold + 50) / 50) * 100}%, #1A1A1A ${((riThresholds.warningThreshold + 50) / 50) * 100}%, #1A1A1A 100%)`
-                              }}
-                            />
-                            <span className="text-lg font-semibold text-red-400 tabular-nums min-w-[4ch]">
-                              {riThresholds.warningThreshold}%
-                            </span>
-                          </div>
-                          <p className="text-xs text-cursor-text-muted mt-2">
-                            Les entreprises avec un écart inférieur à {riThresholds.warningThreshold}% seront marquées en sous-déclaration
-                          </p>
-                        </div>
-
-                        {/* Seuil excellence */}
-                        <div>
-                          <label className="block text-sm font-medium text-cursor-text-primary mb-3">
-                            Seuil d&apos;excellence (écart positif)
-                          </label>
-                          <div className="flex items-center gap-4">
-                            <input
-                              type="range"
-                              min="0"
-                              max="50"
-                              step="1"
-                              value={riThresholds.excellentThreshold}
-                              onChange={(e) => setRiThresholds({...riThresholds, excellentThreshold: parseInt(e.target.value)})}
-                              className="flex-1 h-2 bg-cursor-bg-tertiary rounded-lg appearance-none cursor-pointer slider-cursor"
-                              style={{
-                                background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${(riThresholds.excellentThreshold / 50) * 100}%, #1A1A1A ${(riThresholds.excellentThreshold / 50) * 100}%, #1A1A1A 100%)`
-                              }}
-                            />
-                            <span className="text-lg font-semibold text-blue-400 tabular-nums min-w-[4ch]">
-                              +{riThresholds.excellentThreshold}%
-                            </span>
-                          </div>
-                          <p className="text-xs text-cursor-text-muted mt-2">
-                            Les entreprises avec un écart supérieur à +{riThresholds.excellentThreshold}% seront marquées comme excellentes
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Aperçu des catégories */}
-                      <div className="p-4 rounded-lg bg-cursor-bg-secondary border border-cursor-border-primary">
-                        <h4 className="text-sm font-semibold text-cursor-text-primary mb-3">Aperçu des catégories</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                            <span className="text-cursor-text-secondary">Sous-déclaration : Écart &lt; {riThresholds.warningThreshold}%</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                            <span className="text-cursor-text-secondary">Conforme : {riThresholds.warningThreshold}% ≤ Écart ≤ +{riThresholds.excellentThreshold}%</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-                            <span className="text-cursor-text-secondary">Excellent : Écart &gt; +{riThresholds.excellentThreshold}%</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Bouton reset */}
-                      <button
-                        onClick={() => setRiThresholds(DEFAULT_RI_THRESHOLDS)}
-                        className="w-full px-4 py-2 text-sm text-cursor-text-secondary hover:text-cursor-text-primary bg-cursor-bg-tertiary hover:bg-cursor-bg-secondary border border-cursor-border-primary rounded-lg transition-colors"
-                      >
-                        Réinitialiser aux valeurs par défaut (-20% / +10%)
-                      </button>
-                    </div>
-                  </TabsContent>
-                )}
               </Tabs>
               
               {/* Action button for step 1 - lancer directement l'analyse */}
