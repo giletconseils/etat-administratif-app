@@ -9,40 +9,41 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // CURSOR-inspired color palette
+        // CURSOR-inspired color palette - Dark Theme
         cursor: {
           // Background colors
           bg: {
-            primary: "#1A1A1A",    // Main background
-            secondary: "#2A2A2A",  // Card backgrounds
-            tertiary: "#131316",   // Muted backgrounds
+            primary: "#0A0A0A",    // Main background - deep black
+            secondary: "#121212",  // Card backgrounds
+            tertiary: "#1A1A1A",   // Elevated surfaces
+            elevated: "#1E1E1E",   // Highest elevation
           },
           // Text colors
           text: {
-            primary: "#E0E0E0",    // Main text
+            primary: "#E5E5E5",    // Main text - bright white
             secondary: "#A0A0A0",  // Secondary text
-            muted: "#8A8A8A",      // Muted text
+            muted: "#6B6B6B",      // Muted text
           },
           // Accent colors
           accent: {
             blue: "#4A90E2",       // Primary accent blue
             blueHover: "#3A7BC8",  // Blue hover state
-            button: "#708DAA",     // Button color from CURSOR image
+            button: "#708DAA",     // Button color from Cursor
             buttonHover: "#5A7A9A", // Button hover state
             green: "#22C55E",      // Success green
             red: "#EF4444",        // Error red
-            orange: "#F59E0B",     // Warning orange
+            orange: "#F97316",     // Warning orange
           },
-          // Border colors
+          // Border colors - subtle
           border: {
-            primary: "#1F1F1F",    // Main borders
-            secondary: "#2A2A2A",  // Secondary borders
-            accent: "#3A3A3A",     // Accent borders
+            primary: "#2A2A2A",    // Main borders - very subtle
+            secondary: "#333333",  // Secondary borders
+            accent: "#404040",     // Accent borders
           },
           // Interactive states
           interactive: {
-            hover: "#2A2A2A",      // Hover background
-            active: "#1F1F1F",     // Active background
+            hover: "#1E1E1E",      // Hover background
+            active: "#252525",     // Active background
             disabled: "#0F0F0F",   // Disabled background
           }
         }

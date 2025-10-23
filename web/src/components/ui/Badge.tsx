@@ -6,10 +6,10 @@ type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
 
 export function Badge({ className, variant = "neutral", ...props }: BadgeProps) {
   const variants = {
-    neutral: "bg-neutral-100 text-neutral-700 border border-[var(--border)]",
-    success: "bg-green-50 text-green-700 border border-green-200",
-    danger: "bg-red-50 text-red-700 border border-red-200",
-    info: "bg-blue-50 text-blue-700 border border-blue-200",
+    neutral: "bg-cursor-bg-tertiary text-cursor-text-secondary border border-cursor-border-primary",
+    success: "bg-cursor-accent-green/10 text-cursor-accent-green border border-cursor-accent-green/20",
+    danger: "bg-cursor-accent-red/10 text-cursor-accent-red border border-cursor-accent-red/20",
+    info: "bg-cursor-accent-blue/10 text-cursor-accent-blue border border-cursor-accent-blue/20",
   } as const;
   return (
     <span

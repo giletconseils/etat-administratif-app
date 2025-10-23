@@ -12,8 +12,8 @@ export const TREATMENT_REGISTRY: Record<TreatmentType, TreatmentMetadata> = {
   'ri-anomalies': {
     id: 'ri-anomalies',
     name: 'Détecter les anomalies de déclarations de RI',
-    description: 'Analyse les déclarations de responsabilité pour détecter les anomalies (à venir)',
-    enabled: false, // Not yet implemented
+    description: 'Analyse les Réparations à l\'Identique déclarées vs attendues par assureur (mode SIRET unique ou batch)',
+    enabled: true,
   },
 };
 

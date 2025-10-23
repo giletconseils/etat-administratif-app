@@ -4,9 +4,10 @@ import { useState, useEffect } from 'react';
 interface StatusSelectorProps {
   enabledStatuses: EnabledStatuses;
   onStatusChange: (statuses: EnabledStatuses) => void;
+  disabledStatuses?: string[]; // Statuts qui ne doivent pas être sélectionnables
 }
 
-export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelectorProps) {
+export function StatusSelector({ enabledStatuses, onStatusChange, disabledStatuses = [] }: StatusSelectorProps) {
   const [lastModified, setLastModified] = useState<string>('...');
 
   useEffect(() => {
@@ -25,7 +26,12 @@ export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelect
   }, []);
 
   const selectAll = () => {
-    onStatusChange(DEFAULT_ENABLED_STATUSES);
+    // Créer une copie des statuts par défaut et désactiver ceux qui sont dans disabledStatuses
+    const newStatuses = { ...DEFAULT_ENABLED_STATUSES };
+    disabledStatuses.forEach(status => {
+      newStatuses[status] = false;
+    });
+    onStatusChange(newStatuses);
   };
 
   const selectNone = () => {
@@ -37,6 +43,10 @@ export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelect
   };
 
   const toggleStatus = (status: string) => {
+    // Ne pas permettre de toggle les statuts désactivés
+    if (disabledStatuses.includes(status)) {
+      return;
+    }
     onStatusChange({
       ...enabledStatuses,
       [status]: !enabledStatuses[status]
@@ -59,7 +69,7 @@ export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelect
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-medium text-cursor-text-primary">Ensembles de sous-traitants</h3>
-              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-cursor-accent-green/10 text-cursor-accent-green border border-cursor-accent-green/20">
                 Mis à jour le {lastModified}
               </span>
             </div>
@@ -69,13 +79,13 @@ export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelect
         <div className="flex gap-2">
           <button
             onClick={selectAll}
-            className="text-xs px-3 py-1.5 rounded text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md font-medium"
           >
             Tout sélectionner
           </button>
           <button
             onClick={selectNone}
-            className="text-xs px-3 py-1.5 rounded text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md font-medium"
           >
             Tout désélectionner
           </button>
@@ -84,39 +94,52 @@ export function StatusSelector({ enabledStatuses, onStatusChange }: StatusSelect
       
       {/* CURSOR-style grid - exact match */}
       <div className="grid grid-cols-6 gap-3">
-        {Object.entries(enabledStatuses).map(([status, enabled]) => (
-          <div
-            key={status}
-            onClick={() => toggleStatus(status)}
-            className="relative cursor-pointer group"
-          >
-            <div className={`
-              relative p-4 rounded border transition-all duration-200 hover:scale-102
-              ${enabled 
-                ? 'bg-cursor-bg-secondary border-cursor-border-primary shadow-sm' 
-                : 'bg-cursor-bg-secondary border-cursor-border-primary hover:border-cursor-border-accent hover:shadow-sm'
-              }
-            `}>
-              {/* Indicateur de sélection - checkmark like CURSOR */}
-              {enabled && (
-                <div 
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center bg-green-500 shadow-lg shadow-green-500/50"
-                >
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-              )}
-              
-              {/* Contenu - text centered like CURSOR */}
-              <div className="text-center">
-                <div className="text-lg font-semibold text-cursor-text-primary font-mono">
-                  {status}
+        {Object.entries(enabledStatuses).map(([status, enabled]) => {
+          const isDisabled = disabledStatuses.includes(status);
+          
+          return (
+            <div
+              key={status}
+              onClick={() => toggleStatus(status)}
+              className={`relative group ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              <div className={`
+                relative p-4 rounded-lg border-2 transition-all duration-200
+                ${isDisabled 
+                  ? 'bg-cursor-bg-tertiary border-cursor-border-primary opacity-40'
+                  : enabled 
+                    ? 'bg-blue-950/30 border-blue-500 ring-2 ring-blue-500/30 animate-pulse-blue hover:scale-102' 
+                    : 'bg-cursor-bg-secondary border-cursor-border-primary hover:border-blue-500/50 hover:shadow-sm hover:scale-102'
+                }
+              `}>
+                {/* Badge "Exclu" pour les statuts désactivés */}
+                {isDisabled && (
+                  <div className="absolute -top-2 -right-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-cursor-accent-red/80 text-white border border-cursor-accent-red/50 shadow-md">
+                    Exclu
+                  </div>
+                )}
+                
+                {/* Indicateur de sélection - checkmark like CURSOR */}
+                {enabled && !isDisabled && (
+                  <div 
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center bg-cursor-accent-green shadow-lg glow-cursor-green"
+                  >
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                
+                {/* Contenu - text centered like CURSOR */}
+                <div className="text-center">
+                  <div className={`text-lg font-semibold font-mono ${isDisabled ? 'text-cursor-text-muted' : 'text-cursor-text-primary'}`}>
+                    {status}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       
       {/* CURSOR-style counter - simple text like CURSOR */}

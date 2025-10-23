@@ -125,10 +125,10 @@ export const VALID_STATUSES = ['TR', 'U1', 'U1P', 'U2', 'U3', 'U4'];
 
 // Configuration par défaut des statuts activés
 export const DEFAULT_ENABLED_STATUSES: EnabledStatuses = {
-  'TR': true,
-  'U1': true,
-  'U1P': true,
-  'U2': true,
-  'U3': true,
-  'U4': true
+  'TR': false,
+  'U1': false,
+  'U1P': false,
+  'U2': false,
+  'U3': false,
+  'U4': false
 };

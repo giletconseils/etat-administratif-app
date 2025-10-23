@@ -11,13 +11,19 @@ interface TabsProps {
   defaultValue: string;
   children: React.ReactNode;
   className?: string;
+  onValueChange?: (value: string) => void;
 }
 
-export function Tabs({ defaultValue, children, className }: TabsProps) {
+export function Tabs({ defaultValue, children, className, onValueChange }: TabsProps) {
   const [activeTab, setActiveTab] = React.useState(defaultValue);
 
+  const handleSetActiveTab = (tab: string) => {
+    setActiveTab(tab);
+    onValueChange?.(tab);
+  };
+
   return (
-    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+    <TabsContext.Provider value={{ activeTab, setActiveTab: handleSetActiveTab }}>
       <div className={className}>{children}</div>
     </TabsContext.Provider>
   );
@@ -52,15 +58,15 @@ export function TabsTrigger({ value, children, className }: TabsTriggerProps) {
   return (
     <button
       onClick={() => setActiveTab(value)}
-      className={`px-4 py-3 text-sm font-medium transition-colors relative ${
+      className={`px-4 py-3 text-sm font-medium transition-all relative ${
         isActive
-          ? "text-cursor-text-primary"
+          ? "text-blue-500"
           : "text-cursor-text-secondary hover:text-cursor-text-primary"
       } ${className ?? ""}`}
     >
       {children}
       {isActive && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 rounded-t-sm" />
       )}
     </button>
   );

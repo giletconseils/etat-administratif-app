@@ -1,24 +1,42 @@
-import { useState, useEffect } from 'react';
 import { TreatmentType } from '@/lib/treatments/types';
-import { getAllTreatments, areTreatmentsCompatible } from '@/lib/treatments/registry';
+import { getAllTreatments } from '@/lib/treatments/registry';
 
 interface TreatmentSelectorProps {
   selectedTreatments: TreatmentType[];
   onSelectionChange: (treatments: TreatmentType[]) => void;
+  // Constraints for RI anomalies treatment
+  hasUploadedCsv?: boolean;
+  currentTab?: string;
+  manualSiretsCount?: number;
 }
 
-export function TreatmentSelector({ selectedTreatments, onSelectionChange }: TreatmentSelectorProps) {
-  const [incompatibilityWarning, setIncompatibilityWarning] = useState<string | null>(null);
+export function TreatmentSelector({ 
+  selectedTreatments, 
+  onSelectionChange,
+  hasUploadedCsv = false,
+  currentTab = 'search',
+  manualSiretsCount = 0
+}: TreatmentSelectorProps) {
   const allTreatments = getAllTreatments();
 
-  useEffect(() => {
-    // Check compatibility whenever selection changes
-    if (selectedTreatments.length > 1 && !areTreatmentsCompatible(selectedTreatments)) {
-      setIncompatibilityWarning('Certains traitements sélectionnés sont incompatibles entre eux');
-    } else {
-      setIncompatibilityWarning(null);
+  // Check if RI anomalies is available based on constraints
+  const isRIAnomaliesAvailable = () => {
+    // Available for SIRET search with at least one SIRET
+    return currentTab === 'search' && !hasUploadedCsv && manualSiretsCount > 0;
+  };
+
+  const getRIAnomaliesDisabledReason = () => {
+    if (hasUploadedCsv) {
+      return 'Non disponible avec un fichier CSV uploadé';
     }
-  }, [selectedTreatments]);
+    if (currentTab !== 'search') {
+      return 'Non disponible pour la base sous-traitants (V2)';
+    }
+    if (manualSiretsCount === 0) {
+      return 'Veuillez saisir au moins un SIRET';
+    }
+    return '';
+  };
 
   const handleTreatmentToggle = (treatmentId: TreatmentType) => {
     const treatment = allTreatments.find(t => t.id === treatmentId);
@@ -27,14 +45,35 @@ export function TreatmentSelector({ selectedTreatments, onSelectionChange }: Tre
       return; // Don't allow selecting disabled treatments
     }
 
+    // Check RI anomalies specific constraints
+    if (treatmentId === 'ri-anomalies' && !isRIAnomaliesAvailable()) {
+      return; // Don't allow selecting if constraints not met
+    }
+
     const isSelected = selectedTreatments.includes(treatmentId);
     
     if (isSelected) {
       // Remove treatment
       onSelectionChange(selectedTreatments.filter(t => t !== treatmentId));
     } else {
-      // Add treatment
-      onSelectionChange([...selectedTreatments, treatmentId]);
+      // Add treatment - but first remove incompatible ones
+      let newSelection = [...selectedTreatments];
+      
+      // If this treatment has incompatibilities, remove them from selection
+      if (treatment.incompatibleWith) {
+        newSelection = newSelection.filter(t => !treatment.incompatibleWith?.includes(t));
+      }
+      
+      // Also check if any selected treatment is incompatible with this one
+      newSelection = newSelection.filter(t => {
+        const selectedTreatment = allTreatments.find(tr => tr.id === t);
+        return !selectedTreatment?.incompatibleWith?.includes(treatmentId);
+      });
+      
+      // Add the new treatment
+      newSelection.push(treatmentId);
+      
+      onSelectionChange(newSelection);
     }
   };
 
@@ -56,23 +95,15 @@ export function TreatmentSelector({ selectedTreatments, onSelectionChange }: Tre
         </div>
       </div>
 
-      {/* Incompatibility warning */}
-      {incompatibilityWarning && (
-        <div className="p-3 bg-yellow-900/20 border border-yellow-600 rounded">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span className="text-sm text-yellow-200">{incompatibilityWarning}</span>
-          </div>
-        </div>
-      )}
-
       {/* Treatment options */}
       <div className="space-y-3">
         {allTreatments.map((treatment) => {
           const isSelected = selectedTreatments.includes(treatment.id);
-          const isDisabled = !treatment.enabled;
+          const isDisabled = !treatment.enabled || 
+            (treatment.id === 'ri-anomalies' && !isRIAnomaliesAvailable());
+          const disabledReason = treatment.id === 'ri-anomalies' && !isRIAnomaliesAvailable()
+            ? getRIAnomaliesDisabledReason()
+            : (!treatment.enabled ? 'À venir' : '');
 
           return (
             <div
@@ -80,10 +111,10 @@ export function TreatmentSelector({ selectedTreatments, onSelectionChange }: Tre
               className={`
                 p-4 rounded-lg border transition-all
                 ${isSelected && !isDisabled
-                  ? 'border-blue-500 bg-blue-900/20'
+                  ? 'border-cursor-accent-button bg-cursor-accent-button/10 glow-cursor-blue'
                   : isDisabled
                     ? 'border-cursor-border-primary bg-cursor-bg-tertiary opacity-60'
-                    : 'border-cursor-border-primary bg-cursor-bg-secondary hover:border-cursor-text-muted'
+                    : 'border-cursor-border-primary bg-cursor-bg-secondary hover:border-cursor-border-accent'
                 }
                 ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}
               `}
@@ -94,7 +125,7 @@ export function TreatmentSelector({ selectedTreatments, onSelectionChange }: Tre
                 <div className={`
                   mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0
                   ${isSelected && !isDisabled
-                    ? 'bg-blue-600 border-blue-600'
+                    ? 'bg-cursor-accent-button border-cursor-accent-button'
                     : 'border-cursor-border-primary bg-cursor-bg-primary'
                   }
                 `}>
@@ -113,9 +144,9 @@ export function TreatmentSelector({ selectedTreatments, onSelectionChange }: Tre
                     }`}>
                       {treatment.name}
                     </h4>
-                    {isDisabled && (
-                      <span className="px-2 py-0.5 text-xs rounded bg-cursor-bg-tertiary text-cursor-text-muted border border-cursor-border-primary">
-                        À venir
+                    {isDisabled && disabledReason && (
+                      <span className="px-2 py-0.5 text-xs rounded bg-cursor-bg-tertiary text-cursor-text-muted border border-cursor-border-primary" title={disabledReason}>
+                        {treatment.enabled ? '⚠️' : 'À venir'}
                       </span>
                     )}
                   </div>
@@ -124,6 +155,11 @@ export function TreatmentSelector({ selectedTreatments, onSelectionChange }: Tre
                   }`}>
                     {treatment.description}
                   </p>
+                  {isDisabled && disabledReason && treatment.id === 'ri-anomalies' && (
+                    <p className="text-xs mt-1 text-cursor-accent-orange">
+                      {disabledReason}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

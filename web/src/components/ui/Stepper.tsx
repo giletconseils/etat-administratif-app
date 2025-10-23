@@ -10,9 +10,10 @@ interface StepperProps {
   steps: Step[];
   currentStep: number;
   onStepClick?: (stepId: number) => void;
+  children?: React.ReactNode; // Contenu supplémentaire pour l'étape active
 }
 
-export function Stepper({ steps, currentStep, onStepClick }: StepperProps) {
+export function Stepper({ steps, currentStep, onStepClick, children }: StepperProps) {
   return (
     <div className="w-full py-4">
       {/* Version verticale pour sidebar */}
@@ -27,14 +28,6 @@ export function Stepper({ steps, currentStep, onStepClick }: StepperProps) {
               <div className="flex items-start gap-4 group">
                 {/* Step circle with enhanced animations */}
                 <div className="relative flex-shrink-0">
-                  {/* Animated ring for current step - subtil */}
-                  {isCurrent && (
-                    <>
-                      <div className="absolute -inset-1.5 rounded-full bg-blue-500/20 animate-stepper-ping" />
-                      <div className="absolute -inset-0.5 rounded-full bg-blue-500/10 animate-pulse" />
-                    </>
-                  )}
-                  
                   <button
                     onClick={() => isClickable && onStepClick(step.id)}
                     disabled={!isClickable}
@@ -42,9 +35,9 @@ export function Stepper({ steps, currentStep, onStepClick }: StepperProps) {
                       relative w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm
                       transition-all duration-300 ease-out
                       ${isCompleted 
-                        ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-md shadow-green-500/20' 
+                        ? 'bg-cursor-accent-green text-white shadow-md' 
                         : isCurrent 
-                          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105' 
+                          ? 'bg-blue-600 text-white shadow-lg' 
                           : 'bg-cursor-bg-tertiary text-cursor-text-muted border-2 border-cursor-border-primary'
                       }
                       ${isClickable ? 'cursor-pointer hover:scale-110 hover:shadow-xl active:scale-100' : 'cursor-default'}
@@ -101,6 +94,13 @@ export function Stepper({ steps, currentStep, onStepClick }: StepperProps) {
                   )}
                 </div>
               </div>
+
+              {/* Contenu additionnel pour l'étape active */}
+              {isCurrent && children && (
+                <div className="mt-3 ml-14">
+                  {children}
+                </div>
+              )}
               
               {/* Animated connector line verticale */}
               {index < steps.length - 1 && (
@@ -115,8 +115,8 @@ export function Stepper({ steps, currentStep, onStepClick }: StepperProps) {
                         className={`
                           absolute inset-0 rounded-full transition-all duration-700 ease-out
                           ${isCompleted 
-                            ? 'bg-gradient-to-b from-green-500 to-green-600 shadow-sm shadow-green-500/20 scale-y-100' 
-                            : 'bg-gradient-to-b from-blue-500 to-blue-600 scale-y-0'
+                            ? 'bg-cursor-accent-green shadow-sm scale-y-100' 
+                            : 'bg-cursor-accent-button scale-y-0'
                           }
                           origin-top
                         `}
