@@ -52,27 +52,27 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
       { wch: 10 }, // RI Réel
       { wch: 10 }, // Écart %
       { wch: 18 }, // Statut
-      { wch: 12 }, // Nb Assureurs
+      { wch: 12 }, // Nb Prescripteurs
     ];
     
     XLSX.utils.book_append_sheet(wb, ws, 'Vue synthétique');
     
-    // Feuille 2: Détails par assureur pour chaque entreprise
+    // Feuille 2: Détails par prescripteur pour chaque intervenant réseau
     const detailsData: Array<Record<string, string | number>> = [];
     results.forEach((result) => {
-      if (result.detailsByAssureur && result.detailsByAssureur.length > 0) {
-        result.detailsByAssureur.forEach((detail) => {
+      if (result.detailsByPrescripteur && result.detailsByPrescripteur.length > 0) {
+        result.detailsByPrescripteur.forEach((detail) => {
           detailsData.push({
             'SIRET': result.siret,
             'Dénomination': result.denomination,
             'Rang': result.ranking || 0,
-            'Assureur ID': detail.assureurId,
-            'Assureur': detail.assureurName,
+            'Prescripteur ID': detail.prescripteurId,
+            'Prescripteur': detail.prescripteurName,
             'Missions DU': detail.missionsDU,
             'RI Théorique': formatNumber(detail.riTheorique),
             'RI Réel': detail.riReel,
             'Écart %': detail.ecartPercent.toFixed(1),
-            'Statut Assureur': 
+            'Statut Prescripteur': 
               detail.ecartPercent < thresholds.warningThreshold ? 'Sous-déclaration' :
               detail.ecartPercent > thresholds.excellentThreshold ? 'Excellent' : 
               'Conforme',
@@ -89,16 +89,16 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
         { wch: 15 }, // SIRET
         { wch: 35 }, // Dénomination
         { wch: 6 },  // Rang
-        { wch: 12 }, // Assureur ID
-        { wch: 30 }, // Assureur
+        { wch: 12 }, // Prescripteur ID
+        { wch: 30 }, // Prescripteur
         { wch: 12 }, // Missions DU
         { wch: 14 }, // RI Théorique
         { wch: 10 }, // RI Réel
         { wch: 10 }, // Écart %
-        { wch: 18 }, // Statut Assureur
+        { wch: 18 }, // Statut Prescripteur
       ];
       
-      XLSX.utils.book_append_sheet(wb, wsDetails, 'Détails par assureur');
+      XLSX.utils.book_append_sheet(wb, wsDetails, 'Détails par prescripteur');
     }
     
     const now = new Date();
@@ -237,7 +237,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
             <tbody className="divide-y divide-cursor-border-primary/20">
               {paginatedResults.map((result) => {
                 const isExpanded = expandedSirets.has(result.siret);
-                const hasDetails = result.detailsByAssureur && result.detailsByAssureur.length > 0;
+                const hasDetails = result.detailsByPrescripteur && result.detailsByPrescripteur.length > 0;
                 
                 return (
                   <React.Fragment key={result.siret}>
@@ -285,7 +285,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                                 d="M9 5l7 7-7 7"
                               />
                             </svg>
-                            <span>{result.detailsByAssureur.length}</span>
+                            <span>{result.detailsByPrescripteur.length}</span>
                           </div>
                         )}
                       </td>
@@ -301,7 +301,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                               </svg>
                               <h4 className="text-sm font-semibold text-cursor-text-primary">
-                                Détails par assureur ({result.detailsByAssureur.length})
+                                Détails par prescripteur ({result.detailsByPrescripteur.length})
                               </h4>
                             </div>
                             <div className="overflow-x-auto">
@@ -309,7 +309,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                                 <thead className="bg-cursor-bg-tertiary">
                                   <tr>
                                     <th className="px-6 py-3 text-left text-sm font-semibold text-cursor-text-secondary">
-                                      Assureur
+                                      Prescripteur
                                     </th>
                                     <th className="px-6 py-3 text-right text-sm font-semibold text-cursor-text-secondary">
                                       Missions reçues
@@ -326,16 +326,16 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {result.detailsByAssureur.map((detail, index) => (
+                                  {result.detailsByPrescripteur.map((detail, index) => (
                                     <tr
-                                      key={detail.assureurId}
+                                      key={detail.prescripteurId}
                                       className={`${
                                         index % 2 === 0 ? 'bg-cursor-bg-primary' : 'bg-cursor-bg-secondary'
                                       } border-t border-cursor-border-primary`}
                                     >
                                       <td className="px-6 py-3 text-sm text-cursor-text-primary">
-                                        <div className="font-medium">{detail.assureurName}</div>
-                                        <div className="text-cursor-text-muted text-xs">ID: {detail.assureurId}</div>
+                                        <div className="font-medium">{detail.prescripteurName}</div>
+                                        <div className="text-cursor-text-muted text-xs">ID: {detail.prescripteurId}</div>
                                       </td>
                                       <td className="px-6 py-3 text-sm text-right text-cursor-text-primary tabular-nums">
                                         {detail.missionsDU}

@@ -143,23 +143,23 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
                 />
               </svg>
               <span className="text-sm text-cursor-text-muted">
-                {isExpanded ? "Masquer les détails" : "Cliquez pour voir les détails par assureur"}
-                {result.detailsByAssureur.length > 0 && ` (${result.detailsByAssureur.length})`}
+                {isExpanded ? "Masquer les détails" : "Cliquez pour voir les détails par prescripteur"}
+                {result.detailsByPrescripteur.length > 0 && ` (${result.detailsByPrescripteur.length})`}
               </span>
             </div>
             {getStatusBadge(result.status)}
           </div>
         </div>
 
-        {/* Details by Assureur - expandable */}
-        {isExpanded && result.detailsByAssureur.length > 0 && (
+        {/* Details by Prescripteur - expandable */}
+        {isExpanded && result.detailsByPrescripteur.length > 0 && (
           <div className="bg-cursor-bg-secondary border-t border-cursor-border-primary p-6">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-cursor-border-primary">
                     <th className="text-left py-4 px-6 text-sm font-semibold text-cursor-text-primary">
-                      Assureur
+                      Prescripteur
                     </th>
                     <th className="text-right py-4 px-6 text-sm font-semibold text-cursor-text-primary">
                       Missions reçues
@@ -176,17 +176,17 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
                   </tr>
                 </thead>
                 <tbody>
-                  {result.detailsByAssureur.map((detail, index) => (
+                  {result.detailsByPrescripteur.map((detail, index) => (
                     <tr
-                      key={detail.assureurId}
+                      key={detail.prescripteurId}
                       className={`border-b border-cursor-border-primary ${
                         index % 2 === 0 ? "bg-cursor-bg-tertiary" : ""
                       }`}
                     >
                       <td className="py-4 px-6 text-sm text-cursor-text-primary font-medium">
-                        <div>{detail.assureurName}</div>
+                        <div>{detail.prescripteurName}</div>
                         <div className="text-xs text-cursor-text-muted">
-                          ID: {detail.assureurId}
+                          ID: {detail.prescripteurId}
                         </div>
                       </td>
                       <td className="py-4 px-6 text-sm text-right text-cursor-text-primary tabular-nums">
