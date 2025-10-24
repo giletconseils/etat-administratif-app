@@ -199,17 +199,29 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
     <div className="space-y-6">
       {/* Card synthèse - style inspiré de "Traitement en cours" */}
       <div className="card-surface p-6">
-        {/* Header compact */}
-        <div className="flex items-center gap-3 mb-6">
-          <svg className="w-6 h-6 text-cursor-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-cursor-text-primary">Analyse terminée</h2>
-            <p className="text-sm text-cursor-text-secondary">
-              {totalAnalyzed} intervenants réseaux analysés • {minMissions}+ mission{minMissions > 1 ? 's' : ''} (3 derniers mois)
-            </p>
+        {/* Header compact avec bouton export */}
+        <div className="flex items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <svg className="w-6 h-6 text-cursor-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-cursor-text-primary">Analyse terminée</h2>
+              <p className="text-sm text-cursor-text-secondary">
+                {totalAnalyzed} intervenants réseaux analysés • {minMissions}+ mission{minMissions > 1 ? 's' : ''} (3 derniers mois)
+              </p>
+            </div>
           </div>
+          {/* Bouton export en haut à droite */}
+          <button
+            onClick={exportToCSV}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-2 flex-shrink-0"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Exporter</span>
+          </button>
         </div>
 
         {/* Statistiques en une seule card */}
@@ -252,19 +264,6 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
               <div className="text-xs text-cursor-text-muted">Conformes</div>
             </div>
           </div>
-        </div>
-
-        {/* Bouton export sobre */}
-        <div className="mt-4">
-          <button
-            onClick={exportToCSV}
-            className="w-full px-4 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>Exporter en Excel (synthèse + détails par assureur)</span>
-          </button>
         </div>
       </div>
 
