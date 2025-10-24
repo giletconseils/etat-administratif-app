@@ -81,6 +81,10 @@ export async function POST(request: NextRequest) {
 
     // Vérification de l'autorisation
     const authorized = await isEmailAuthorized(email);
+    
+    // DEBUG: Log pour voir si l'email est autorisé
+    console.log(`[AUTH] Email: ${email}, Authorized: ${authorized}`);
+    
     if (!authorized) {
       // Message générique pour ne pas révéler si l'email est autorisé ou non
       return NextResponse.json(
@@ -105,20 +109,26 @@ export async function POST(request: NextRequest) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Envoi de l'email
-    const { error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || "Gilet Conseils <onboarding@resend.dev>",
+    const emailFrom = process.env.EMAIL_FROM || "Gilet Conseils <onboarding@resend.dev>";
+    
+    console.log(`[AUTH] Sending email from: ${emailFrom} to: ${email}`);
+    
+    const { data, error } = await resend.emails.send({
+      from: emailFrom,
       to: [email],
       subject: "Connexion à votre espace",
       react: MagicLinkEmail({ magicLink, name, expiryMinutes: 15 }) as React.ReactElement,
     });
 
     if (error) {
-      console.error("Error sending email:", error);
+      console.error("[AUTH] Error sending email:", error);
       return NextResponse.json(
         { success: false, message: "Erreur lors de l'envoi de l'email" },
         { status: 500 }
       );
     }
+    
+    console.log(`[AUTH] Email sent successfully. ID: ${data?.id}`);
 
     return NextResponse.json({
       success: true,
