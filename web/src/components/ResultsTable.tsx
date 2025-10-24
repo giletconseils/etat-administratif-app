@@ -60,7 +60,7 @@ export function ResultsTable({
   }
 
   return (
-    <div className="mt-6 transition-all duration-500 ease-out hover:scale-[1.02] hover:mx-[-10%]">
+    <div className="mt-6">
       {/* Header section résultats avec design élégant */}
       <div className="mb-6 relative">
         <div className="flex items-center justify-between gap-3 mb-4">
@@ -133,7 +133,7 @@ export function ResultsTable({
         {/* Séparateur élégant */}
         <div className="mt-4 h-px bg-gradient-to-r from-transparent via-[#2a2a2a] to-transparent"></div>
       </div>
-      <div className="card-surface rounded-lg overflow-hidden transition-all duration-500 ease-out hover:shadow-2xl hover:shadow-orange-500/10">
+      <div className="card-surface rounded-lg overflow-hidden transition-all duration-500 ease-out hover:mx-[-10%] hover:shadow-2xl hover:shadow-orange-500/10">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-800 text-left">

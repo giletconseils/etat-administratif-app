@@ -145,7 +145,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
   };
 
   return (
-    <div className="space-y-6 transition-all duration-500 ease-out hover:scale-[1.02] hover:mx-[-10%]">
+    <div className="space-y-6">
       {/* Card synthèse - style inspiré de "Traitement en cours" */}
       <div className="card-surface p-6">
         {/* Header compact */}
@@ -218,7 +218,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
       </div>
 
       {/* Tableau des résultats */}
-      <div className="card-surface overflow-hidden transition-all duration-500 ease-out hover:shadow-2xl hover:shadow-blue-500/10">
+      <div className="card-surface overflow-hidden transition-all duration-500 ease-out hover:mx-[-10%] hover:shadow-2xl hover:shadow-blue-500/10">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-cursor-bg-tertiary border-b border-cursor-border-primary/30">
