@@ -31,6 +31,33 @@
   --cursor-hover: #1E1E1E;          /* Hover background */
   --cursor-active: #252525;         /* Active background */
   --cursor-disabled: #0F0F0F;       /* Disabled background */
+  
+  /* Button Sizing Variables - Standardized */
+  --btn-height-sm: 2rem;            /* 32px - Petit bouton */
+  --btn-height-md: 2.5rem;          /* 40px - Bouton moyen */
+  --btn-height-lg: 3rem;            /* 48px - Grand bouton */
+  
+  --btn-padding-x-sm: 0.75rem;      /* 12px - Padding horizontal petit */
+  --btn-padding-x-md: 1rem;         /* 16px - Padding horizontal moyen */
+  --btn-padding-x-lg: 1.5rem;       /* 24px - Padding horizontal grand */
+  
+  --btn-padding-y-sm: 0.5rem;       /* 8px - Padding vertical petit */
+  --btn-padding-y-md: 0.625rem;     /* 10px - Padding vertical moyen */
+  --btn-padding-y-lg: 0.75rem;      /* 12px - Padding vertical grand */
+  
+  --btn-text-size-sm: 0.75rem;      /* 12px - Texte petit */
+  --btn-text-size-md: 0.875rem;     /* 14px - Texte moyen */
+  --btn-text-size-lg: 1rem;         /* 16px - Texte grand */
+  
+  --btn-icon-size-sm: 0.875rem;     /* 14px - Icône petite */
+  --btn-icon-size-md: 1rem;         /* 16px - Icône moyenne */
+  --btn-icon-size-lg: 1.25rem;      /* 20px - Icône grande */
+  
+  --btn-gap-sm: 0.375rem;           /* 6px - Gap entre icône et texte petit */
+  --btn-gap-md: 0.5rem;             /* 8px - Gap entre icône et texte moyen */
+  --btn-gap-lg: 0.625rem;           /* 10px - Gap entre icône et texte grand */
+  
+  --btn-border-radius: 0.5rem;      /* 8px - Border radius standard */
 }
 
 /* Legacy CSS variables for compatibility */
@@ -130,6 +157,132 @@ body {
 .btn-cursor-secondary:hover:not(:disabled) {
   background-color: var(--cursor-hover);
   border-color: var(--cursor-border-accent);
+}
+
+/* ============================================
+   STANDARDIZED BUTTON CLASSES WITH SIZE VARIANTS
+   ============================================ */
+
+/* Base button class with common styles */
+.btn-standard {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--btn-border-radius);
+  font-weight: 500;
+  transition: all 150ms ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-standard:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Button Sizes - Small */
+.btn-sm {
+  height: var(--btn-height-sm);
+  padding: var(--btn-padding-y-sm) var(--btn-padding-x-sm);
+  font-size: var(--btn-text-size-sm);
+  gap: var(--btn-gap-sm);
+}
+
+.btn-sm svg {
+  width: var(--btn-icon-size-sm);
+  height: var(--btn-icon-size-sm);
+}
+
+/* Button Sizes - Medium (Default) */
+.btn-md {
+  height: var(--btn-height-md);
+  padding: var(--btn-padding-y-md) var(--btn-padding-x-md);
+  font-size: var(--btn-text-size-md);
+  gap: var(--btn-gap-md);
+}
+
+.btn-md svg {
+  width: var(--btn-icon-size-md);
+  height: var(--btn-icon-size-md);
+}
+
+/* Button Sizes - Large */
+.btn-lg {
+  height: var(--btn-height-lg);
+  padding: var(--btn-padding-y-lg) var(--btn-padding-x-lg);
+  font-size: var(--btn-text-size-lg);
+  gap: var(--btn-gap-lg);
+}
+
+.btn-lg svg {
+  width: var(--btn-icon-size-lg);
+  height: var(--btn-icon-size-lg);
+}
+
+/* Button Variants - Primary (Blue) */
+.btn-primary {
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+/* Button Variants - Secondary */
+.btn-secondary {
+  background-color: var(--cursor-bg-secondary);
+  color: var(--cursor-text-primary);
+  border-color: var(--cursor-border-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--cursor-hover);
+  border-color: var(--cursor-border-accent);
+}
+
+/* Button Variants - Success (Green) */
+.btn-success {
+  background-color: var(--cursor-accent-green);
+  color: white;
+  border-color: var(--cursor-accent-green);
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #16a34a;
+  border-color: #16a34a;
+}
+
+/* Button Variants - Danger (Red) */
+.btn-danger {
+  background-color: var(--cursor-accent-red);
+  color: white;
+  border-color: var(--cursor-accent-red);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* Button Variants - Warning (Orange) */
+.btn-warning {
+  background-color: var(--cursor-accent-orange);
+  color: white;
+  border-color: var(--cursor-accent-orange);
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: #ea580c;
+  border-color: #ea580c;
+}
+
+/* Full width button */
+.btn-full {
+  width: 100%;
 }
 
 /* CURSOR-style input */

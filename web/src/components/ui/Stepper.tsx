@@ -103,7 +103,7 @@ export function Stepper({ steps, currentStep, onStepClick, children, compact = f
 
               {/* Contenu additionnel pour l'étape active */}
               {isCurrent && children && (
-                <div className="mt-3 ml-14">
+                <div className="mt-3">
                   {children}
                 </div>
               )}
