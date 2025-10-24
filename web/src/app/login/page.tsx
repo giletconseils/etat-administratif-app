@@ -128,7 +128,7 @@ function LoginForm() {
       <div className="absolute inset-0 overflow-hidden" style={{ mixBlendMode: 'screen' }}>
         {/* Orb 1 - Orange FairFair - Grande orbe en haut à gauche du centre */}
         <div 
-          ref={(el) => (orbsRef.current[0] = el)}
+          ref={(el) => void (orbsRef.current[0] = el)}
           className="absolute w-[800px] h-[800px] top-1/2 left-1/2 -translate-x-[60%] -translate-y-[60%] rounded-full blur-[150px] animate-float-slow"
           style={{ 
             willChange: 'transform',
@@ -140,7 +140,7 @@ function LoginForm() {
         
         {/* Orb 2 - Blue FairFair - Grande orbe en bas à droite du centre */}
         <div 
-          ref={(el) => (orbsRef.current[1] = el)}
+          ref={(el) => void (orbsRef.current[1] = el)}
           className="absolute w-[900px] h-[900px] top-1/2 left-1/2 -translate-x-[40%] -translate-y-[40%] rounded-full blur-[140px] animate-float-delayed"
           style={{ 
             willChange: 'transform',

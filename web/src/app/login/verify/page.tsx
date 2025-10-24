@@ -29,7 +29,7 @@ function VerifyContent() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black overflow-hidden animate-fade-in"
       style={{
-        animation: 'fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards'
+        animation: 'fadeIn 2.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards'
       }}
     >
       {/* Background animated dots pattern */}
@@ -40,13 +40,14 @@ function VerifyContent() {
         }}></div>
       </div>
 
-      {/* Animated orbs - très subtiles */}
+      {/* Animated orbs - très subtiles avec fade-in */}
       <div className="absolute inset-0 overflow-hidden" style={{ mixBlendMode: 'screen' }}>
         {/* Orb Orange */}
         <div 
           className="absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-[70%] -translate-y-[60%] rounded-full blur-[140px] animate-pulse-slow"
           style={{ 
             background: 'radial-gradient(circle at center, rgba(244, 121, 32, 0.25) 0%, rgba(244, 121, 32, 0.15) 50%, transparent 100%)',
+            animation: 'fadeIn 2s ease-in 0.5s backwards, pulseSlow 8s ease-in-out infinite',
           }}
         ></div>
         
@@ -55,7 +56,7 @@ function VerifyContent() {
           className="absolute w-[700px] h-[700px] top-1/2 left-1/2 -translate-x-[30%] -translate-y-[40%] rounded-full blur-[130px] animate-pulse-slow"
           style={{ 
             background: 'radial-gradient(circle at center, rgba(0, 167, 225, 0.3) 0%, rgba(0, 167, 225, 0.18) 50%, transparent 100%)',
-            animationDelay: '1s',
+            animation: 'fadeIn 2s ease-in 1s backwards, pulseSlow 8s ease-in-out 1s infinite',
           }}
         ></div>
       </div>
@@ -63,7 +64,7 @@ function VerifyContent() {
       {/* Content - minimaliste */}
       <div className="relative z-10 flex flex-col items-center animate-scale-in"
         style={{
-          animation: 'scaleIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards'
+          animation: 'scaleIn 1s cubic-bezier(0.25, 0.1, 0.25, 1) 1.8s backwards'
         }}
       >
         {status === "verifying" && (
