@@ -77,16 +77,30 @@ export default function LoginPage() {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black overflow-hidden">
-      {/* Background glow effects - style n8n */}
+      {/* Background animated dots pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'radial-gradient(circle, rgba(112, 141, 170, 0.15) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+        }}></div>
+      </div>
+
+      {/* Animated gradient orbs - style n8n */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Glow top left - violet */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-pulse"></div>
+        {/* Orb 1 - Purple */}
+        <div className="absolute w-[500px] h-[500px] -top-48 -left-32 bg-gradient-to-br from-purple-600/30 via-purple-500/20 to-transparent rounded-full blur-[100px] animate-float"></div>
         
-        {/* Glow top right - blue */}
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-blue-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+        {/* Orb 2 - Blue */}
+        <div className="absolute w-[450px] h-[450px] top-20 -right-40 bg-gradient-to-br from-blue-500/25 via-cyan-500/15 to-transparent rounded-full blur-[90px] animate-float-delayed"></div>
         
-        {/* Glow bottom - pink */}
-        <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+        {/* Orb 3 - Pink */}
+        <div className="absolute w-[550px] h-[550px] -bottom-48 left-1/4 bg-gradient-to-br from-pink-600/20 via-rose-500/15 to-transparent rounded-full blur-[110px] animate-float-slow"></div>
+        
+        {/* Orb 4 - Teal */}
+        <div className="absolute w-[400px] h-[400px] bottom-20 right-1/4 bg-gradient-to-br from-teal-500/15 via-emerald-500/10 to-transparent rounded-full blur-[85px] animate-float-delayed-2"></div>
+        
+        {/* Orb 5 - Indigo (center) */}
+        <div className="absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-indigo-600/10 via-purple-500/5 to-transparent rounded-full blur-[120px] animate-pulse-slow"></div>
       </div>
 
       {/* Content wrapper - centered */}

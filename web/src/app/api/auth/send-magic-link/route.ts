@@ -8,8 +8,6 @@ import {
 } from "@/lib/auth-utils";
 import { MagicLinkEmail } from "@/lib/email-templates/magic-link";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Simple in-memory rate limiting (en production, utiliser Redis ou une DB)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
@@ -102,6 +100,9 @@ export async function POST(request: NextRequest) {
 
     // Récupération du nom
     const name = await getNameForEmail(email);
+
+    // Initialisation de Resend (au runtime, pas au build)
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Envoi de l'email
     const { error } = await resend.emails.send({
