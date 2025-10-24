@@ -76,7 +76,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden flex flex-col items-center justify-center bg-black relative">
+    <div className="fixed inset-0 flex items-center justify-center bg-black overflow-hidden">
       {/* Background glow effects - style n8n */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Glow top left - violet */}
@@ -89,18 +89,20 @@ export default function LoginPage() {
         <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      {/* Title outside card */}
-      <div className="relative z-10 text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-          Connexion à votre espace
-        </h1>
-        <p className="text-sm text-gray-400">
-          Entrez votre email pour recevoir un lien de connexion
-        </p>
-      </div>
+      {/* Content wrapper - centered */}
+      <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-md px-4">
+        {/* Title outside card */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+            Connexion à votre espace
+          </h1>
+          <p className="text-sm text-gray-400">
+            Entrez votre email pour recevoir un lien de connexion
+          </p>
+        </div>
 
-      {/* Login card */}
-      <div className="relative z-10 w-full max-w-md px-4">
+        {/* Login card */}
+        <div className="w-full">
         <div className="bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl p-8">
 
           {/* Form */}
@@ -222,6 +224,7 @@ export default function LoginPage() {
               En vous connectant, vous acceptez nos conditions d'utilisation
             </p>
           </div>
+        </div>
         </div>
       </div>
     </div>

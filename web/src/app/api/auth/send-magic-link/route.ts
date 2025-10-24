@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     // Envoi de l'email
     const { error } = await resend.emails.send({
-      from: "Gilet Conseils <noreply@giletconseils.fr>",
+      from: process.env.EMAIL_FROM || "Gilet Conseils <onboarding@resend.dev>",
       to: [email],
       subject: "Connexion à votre espace",
       react: MagicLinkEmail({ magicLink, name, expiryMinutes: 15 }) as React.ReactElement,

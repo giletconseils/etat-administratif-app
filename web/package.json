@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@react-email/components": "^0.5.7",
+    "@react-email/render": "^1.4.0",
     "@types/jsonwebtoken": "^9.0.10",
     "jose": "^6.1.0",
     "jsonwebtoken": "^9.0.2",
