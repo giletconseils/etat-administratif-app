@@ -40,38 +40,41 @@ function LoginForm() {
 
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Animate orbs based on mouse position
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  // Animate orbs based on mouse position (separate effect)
+  useEffect(() => {
+    let animationFrameId: number;
+
     const animateOrbs = () => {
       orbsRef.current.forEach((orb, index) => {
         if (orb) {
-          // Different speeds and directions for each orb
-          const speed = [0.05, 0.08, 0.06, 0.07, 0.04][index] || 0.05;
-          const direction = [1, -1, 1, -1, 1][index] || 1;
+          // Seulement 2 orbes maintenant - Réaction subtile
+          const speeds = [60, 80]; // Plus lent pour effet de rétro-éclairage doux
+          const directions = [1, -1];
+          const speed = speeds[index];
+          const direction = directions[index];
           
-          const currentTransform = orb.style.transform || '';
-          const currentX = parseFloat(currentTransform.match(/translateX\(([-\d.]+)px\)/)?.[1] || '0');
-          const currentY = parseFloat(currentTransform.match(/translateY\(([-\d.]+)px\)/)?.[1] || '0');
+          // Calculate target position based on mouse (centered at 0.5, 0.5)
+          const targetX = (mousePosition.x - 0.5) * speed * direction;
+          const targetY = (mousePosition.y - 0.5) * speed * direction;
           
-          // Calculate target position based on mouse
-          const targetX = (mousePosition.x - 0.5) * 100 * speed * direction;
-          const targetY = (mousePosition.y - 0.5) * 100 * speed * direction;
-          
-          // Smooth interpolation
-          const newX = currentX + (targetX - currentX) * 0.1;
-          const newY = currentY + (targetY - currentY) * 0.1;
-          
-          orb.style.transform = `translateX(${newX}px) translateY(${newY}px)`;
+          // Apply transform with custom property to avoid conflicts with CSS animations
+          orb.style.setProperty('--mouse-x', `${targetX}px`);
+          orb.style.setProperty('--mouse-y', `${targetY}px`);
         }
       });
       
-      requestAnimationFrame(animateOrbs);
+      animationFrameId = requestAnimationFrame(animateOrbs);
     };
 
-    const animationFrame = requestAnimationFrame(animateOrbs);
+    animationFrameId = requestAnimationFrame(animateOrbs);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      cancelAnimationFrame(animationFrame);
+      cancelAnimationFrame(animationFrameId);
     };
   }, [mousePosition]);
 
@@ -121,22 +124,31 @@ function LoginForm() {
         }}></div>
       </div>
 
-      {/* Animated gradient orbs - couleurs FairFair */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Orb 1 - Orange FairFair */}
-        <div className="absolute w-[500px] h-[500px] -top-48 -left-32 bg-gradient-to-br from-orange-500/30 via-orange-400/20 to-transparent rounded-full blur-[100px] animate-float"></div>
+      {/* Animated gradient orbs - Rétro-éclairage avec 2 grandes orbes */}
+      <div className="absolute inset-0 overflow-hidden" style={{ mixBlendMode: 'screen' }}>
+        {/* Orb 1 - Orange FairFair - Grande orbe en haut à gauche du centre */}
+        <div 
+          ref={(el) => (orbsRef.current[0] = el)}
+          className="absolute w-[800px] h-[800px] top-1/2 left-1/2 -translate-x-[60%] -translate-y-[60%] rounded-full blur-[150px] animate-float-slow"
+          style={{ 
+            willChange: 'transform',
+            background: 'radial-gradient(circle at center, rgba(244, 121, 32, 0.6) 0%, rgba(244, 121, 32, 0.45) 35%, rgba(244, 121, 32, 0.25) 60%, transparent 100%)',
+            '--mouse-x': '0px',
+            '--mouse-y': '0px',
+          } as React.CSSProperties}
+        ></div>
         
-        {/* Orb 2 - Blue FairFair */}
-        <div className="absolute w-[450px] h-[450px] top-20 -right-40 bg-gradient-to-br from-[#00A7E1]/25 via-blue-400/15 to-transparent rounded-full blur-[90px] animate-float-delayed"></div>
-        
-        {/* Orb 3 - Pink FairFair */}
-        <div className="absolute w-[550px] h-[550px] -bottom-48 left-1/4 bg-gradient-to-br from-pink-500/20 via-pink-400/15 to-transparent rounded-full blur-[110px] animate-float-slow"></div>
-        
-        {/* Orb 4 - Green FairFair */}
-        <div className="absolute w-[400px] h-[400px] bottom-20 right-1/4 bg-gradient-to-br from-green-500/15 via-lime-400/10 to-transparent rounded-full blur-[85px] animate-float-delayed-2"></div>
-        
-        {/* Orb 5 - Blue center */}
-        <div className="absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-[#00A7E1]/10 via-blue-500/5 to-transparent rounded-full blur-[120px] animate-pulse-slow"></div>
+        {/* Orb 2 - Blue FairFair - Grande orbe en bas à droite du centre */}
+        <div 
+          ref={(el) => (orbsRef.current[1] = el)}
+          className="absolute w-[900px] h-[900px] top-1/2 left-1/2 -translate-x-[40%] -translate-y-[40%] rounded-full blur-[140px] animate-float-delayed"
+          style={{ 
+            willChange: 'transform',
+            background: 'radial-gradient(circle at center, rgba(0, 167, 225, 0.55) 0%, rgba(0, 167, 225, 0.4) 35%, rgba(0, 167, 225, 0.22) 60%, transparent 100%)',
+            '--mouse-x': '0px',
+            '--mouse-y': '0px',
+          } as React.CSSProperties}
+        ></div>
       </div>
 
       {/* Content wrapper - centered */}
@@ -144,7 +156,7 @@ function LoginForm() {
         {/* Title outside card */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-            Connexion à votre espace
+            Connexion au hub
           </h1>
           <p className="text-sm text-gray-400">
             Entrez votre email pour recevoir un lien de connexion
@@ -153,7 +165,7 @@ function LoginForm() {
 
         {/* Login card */}
         <div className="w-full">
-        <div className="bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl p-8">
+        <div className="bg-[#1a1a1a]/40 backdrop-blur-3xl border border-white/[0.15] rounded-2xl shadow-2xl p-8" style={{ backdropFilter: 'blur(60px) saturate(180%)' }}>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -284,13 +296,6 @@ function LoginForm() {
               </div>
             </div>
           )}
-
-          {/* Footer info */}
-          <div className="mt-8 text-center">
-            <p className="text-xs text-gray-600">
-              En vous connectant, vous acceptez nos conditions d&apos;utilisation
-            </p>
-          </div>
         </div>
         </div>
       </div>

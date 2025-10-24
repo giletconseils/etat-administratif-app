@@ -801,7 +801,7 @@ function AnalysePageContent() {
   return (
     <div className="min-h-screen bg-cursor-bg-primary flex">
       {/* Sidebar fixe avec style professionnel - avec padding-top pour le header */}
-      <aside className="w-80 bg-gradient-to-b from-cursor-bg-elevated via-cursor-bg-tertiary to-cursor-bg-secondary border-r border-white/[0.02] fixed left-0 top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
+      <aside className="w-80 bg-gradient-to-b from-cursor-bg-elevated via-cursor-bg-tertiary to-cursor-bg-secondary border-r border-white/[0.05] fixed left-0 top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
         <div className="p-6">
           {/* Carte Titre + Bouton Retour */}
           <div className="card-surface p-5 mb-6">

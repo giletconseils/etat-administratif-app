@@ -1,7 +1,57 @@
 "use client";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 export default function HomePage() {
+  const [mousePosition, setMousePosition] = useState({ x: 0.5, y: 0.5 });
+  const orbsRef = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      setMousePosition({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  // Animate orbs based on mouse position
+  useEffect(() => {
+    let animationFrameId: number;
+
+    const animateOrbs = () => {
+      orbsRef.current.forEach((orb, index) => {
+        if (orb) {
+          // Subtle reaction for homepage - lower speeds than login
+          const speeds = [40, 50, 45, 55];
+          const directions = [1, -1, 0.8, -0.6];
+          const speed = speeds[index];
+          const direction = directions[index];
+          
+          const targetX = (mousePosition.x - 0.5) * speed * direction;
+          const targetY = (mousePosition.y - 0.5) * speed * direction;
+          
+          orb.style.setProperty('--mouse-x', `${targetX}px`);
+          orb.style.setProperty('--mouse-y', `${targetY}px`);
+        }
+      });
+      
+      animationFrameId = requestAnimationFrame(animateOrbs);
+    };
+
+    animationFrameId = requestAnimationFrame(animateOrbs);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [mousePosition]);
+
   const treatmentCategories = [
     {
       id: "enrichment",
@@ -156,19 +206,78 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] bg-cursor-bg-primary">
-      <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="relative min-h-[calc(100vh-5rem)] bg-cursor-bg-primary overflow-hidden">
+      {/* Background animated dots pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'radial-gradient(circle, rgba(112, 141, 170, 0.15) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+        }}></div>
+      </div>
+
+      {/* Animated gradient orbs - Discrètes avec couleurs des catégories */}
+      <div className="absolute inset-0 overflow-hidden" style={{ mixBlendMode: 'screen' }}>
+        {/* Orb 1 - Blue (Enrichissement) - Top left */}
+        <div 
+          ref={(el) => { orbsRef.current[0] = el; }}
+          className="absolute w-[600px] h-[600px] top-[10%] left-[10%] rounded-full blur-[120px] animate-float-slow"
+          style={{ 
+            willChange: 'transform',
+            background: 'radial-gradient(circle at center, rgba(74, 144, 226, 0.2) 0%, rgba(74, 144, 226, 0.12) 50%, transparent 100%)',
+            '--mouse-x': '0px',
+            '--mouse-y': '0px',
+          } as React.CSSProperties}
+        ></div>
+        
+        {/* Orb 2 - Orange (Détecteur RI) - Top right */}
+        <div 
+          ref={(el) => { orbsRef.current[1] = el; }}
+          className="absolute w-[550px] h-[550px] top-[15%] right-[15%] rounded-full blur-[110px] animate-float-delayed"
+          style={{ 
+            willChange: 'transform',
+            background: 'radial-gradient(circle at center, rgba(249, 115, 22, 0.18) 0%, rgba(249, 115, 22, 0.11) 50%, transparent 100%)',
+            '--mouse-x': '0px',
+            '--mouse-y': '0px',
+          } as React.CSSProperties}
+        ></div>
+        
+        {/* Orb 3 - Purple (Agents) - Bottom left */}
+        <div 
+          ref={(el) => { orbsRef.current[2] = el; }}
+          className="absolute w-[580px] h-[580px] bottom-[20%] left-[15%] rounded-full blur-[115px] animate-float"
+          style={{ 
+            willChange: 'transform',
+            background: 'radial-gradient(circle at center, rgba(168, 85, 247, 0.16) 0%, rgba(168, 85, 247, 0.1) 50%, transparent 100%)',
+            '--mouse-x': '0px',
+            '--mouse-y': '0px',
+          } as React.CSSProperties}
+        ></div>
+        
+        {/* Orb 4 - Teal (Réseau & Compétences) - Bottom right */}
+        <div 
+          ref={(el) => { orbsRef.current[3] = el; }}
+          className="absolute w-[520px] h-[520px] bottom-[15%] right-[10%] rounded-full blur-[105px] animate-float-delayed-2"
+          style={{ 
+            willChange: 'transform',
+            background: 'radial-gradient(circle at center, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.09) 50%, transparent 100%)',
+            '--mouse-x': '0px',
+            '--mouse-y': '0px',
+          } as React.CSSProperties}
+        ></div>
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cursor-accent-blue/10 border border-cursor-accent-blue/20 mb-6">
+          {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cursor-accent-blue/10 border border-cursor-accent-blue/20 mb-6">
             <svg className="w-4 h-4 text-cursor-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            <span className="text-sm font-medium text-cursor-accent-blue">Hub d&apos;Analyse & Automatisation</span>
-          </div>
+            <span className="text-sm font-medium text-cursor-accent-blue">Hub d&apos;analyse & automatisation</span>
+          </div> */}
           
           <h1 className="text-4xl md:text-5xl font-bold text-cursor-text-primary mb-4 tracking-tight">
-            Hub d&apos;Analyse & Automatisation
+            Hub d&apos;analyse & automatisation
           </h1>
           <p className="text-lg text-cursor-text-secondary max-w-2xl mx-auto">
             Détection d&apos;anomalies, enrichissement de données et agents intelligents
@@ -205,10 +314,11 @@ export default function HomePage() {
                           rounded-xl border p-6
                           transition-all duration-300
                           ${isDisabled 
-                            ? 'opacity-50 cursor-not-allowed bg-cursor-bg-tertiary border-cursor-border-primary'
-                            : `bg-gradient-to-br ${colors.gradient} ${colors.border} ${colors.hover} hover:shadow-lg cursor-pointer`
+                            ? 'opacity-50 cursor-not-allowed bg-cursor-bg-tertiary/40 backdrop-blur-xl border-white/[0.08]'
+                            : `bg-[#1a1a1a]/40 backdrop-blur-3xl border-white/[0.15] hover:border-white/[0.25] hover:shadow-2xl cursor-pointer`
                           }
                         `}
+                        style={!isDisabled ? { backdropFilter: 'blur(40px) saturate(150%)' } : {}}
                         onClick={(e) => isDisabled && e.preventDefault()}
                       >
                         {/* Shimmer effect on hover */}
@@ -221,11 +331,11 @@ export default function HomePage() {
                           <div className={`
                             flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center
                             ${isDisabled 
-                              ? 'bg-cursor-bg-secondary text-cursor-text-muted'
-                              : `bg-gradient-to-br ${colors.gradient} text-${category.color}-400`
+                              ? 'bg-cursor-bg-secondary/50 text-cursor-text-muted border border-white/[0.05]'
+                              : `bg-white/5 text-${category.color}-400 border border-white/[0.1]`
                             }
-                            shadow-md transition-transform duration-300
-                            ${!isDisabled && 'group-hover:scale-110'}
+                            shadow-lg transition-transform duration-300
+                            ${!isDisabled && 'group-hover:scale-110 group-hover:bg-white/10 group-hover:border-white/[0.15]'}
                           `}>
                             {treatment.icon}
                           </div>

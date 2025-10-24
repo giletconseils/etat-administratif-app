@@ -167,6 +167,24 @@ body {
   border-color: var(--cursor-border-accent);
 }
 
+/* FairFair brand button - use the brand blue */
+.btn-fairfair-primary {
+  background-color: var(--fairfair-blue);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 200ms ease;
+}
+
+.btn-fairfair-primary:hover:not(:disabled) {
+  background-color: var(--fairfair-blue-hover);
+  opacity: 1;
+}
+
+.btn-fairfair-primary:active:not(:disabled) {
+  background-color: var(--fairfair-blue-dark);
+}
+
 /* ============================================
    STANDARDIZED BUTTON CLASSES WITH SIZE VARIANTS
    ============================================ */
@@ -387,6 +405,17 @@ body {
   }
 }
 
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.2s ease-in-out;
 }
@@ -599,46 +628,46 @@ body {
 /* Floating orbs animations - style n8n */
 @keyframes float {
   0%, 100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(0, 0) scale(1);
   }
   33% {
-    transform: translate(30px, -30px) scale(1.1);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(80px, -80px) scale(1.15);
   }
   66% {
-    transform: translate(-20px, 20px) scale(0.9);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(-60px, 60px) scale(0.85);
   }
 }
 
 @keyframes floatDelayed {
   0%, 100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(0, 0) scale(1);
   }
   33% {
-    transform: translate(-25px, 25px) scale(1.05);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(-45px, 45px) scale(1.05);
   }
   66% {
-    transform: translate(20px, -15px) scale(0.95);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(40px, -35px) scale(0.96);
   }
 }
 
 @keyframes floatSlow {
   0%, 100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(15px, -20px) scale(1.08);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(35px, -40px) scale(1.06);
   }
 }
 
 @keyframes floatDelayed2 {
   0%, 100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(0, 0) scale(1);
   }
   33% {
-    transform: translate(20px, 20px) scale(0.92);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(60px, 60px) scale(0.88);
   }
   66% {
-    transform: translate(-15px, -25px) scale(1.12);
+    transform: translate(var(--mouse-x, 0), var(--mouse-y, 0)) translate(-50px, -70px) scale(1.16);
   }
 }
 
@@ -654,23 +683,23 @@ body {
 }
 
 .animate-float {
-  animation: float 20s ease-in-out infinite;
+  animation: float 10s ease-in-out infinite;
 }
 
 .animate-float-delayed {
-  animation: floatDelayed 25s ease-in-out infinite;
+  animation: floatDelayed 10s ease-in-out infinite;
 }
 
 .animate-float-slow {
-  animation: floatSlow 30s ease-in-out infinite;
+  animation: floatSlow 12s ease-in-out infinite;
 }
 
 .animate-float-delayed-2 {
-  animation: floatDelayed2 22s ease-in-out infinite;
+  animation: floatDelayed2 11s ease-in-out infinite;
 }
 
 .animate-pulse-slow {
-  animation: pulseSlow 15s ease-in-out infinite;
+  animation: pulseSlow 8s ease-in-out infinite;
 }
 
 /* Animated border gradient for current step card */

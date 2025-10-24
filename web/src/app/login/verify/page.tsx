@@ -27,109 +27,86 @@ function VerifyContent() {
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f1419] p-4">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.15) 1px, transparent 0)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
+    <div className="fixed inset-0 flex items-center justify-center bg-black overflow-hidden animate-fade-in"
+      style={{
+        animation: 'fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards'
+      }}
+    >
+      {/* Background animated dots pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'radial-gradient(circle, rgba(112, 141, 170, 0.15) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+        }}></div>
       </div>
 
-      {/* Status card */}
-      <div className="relative w-full max-w-md">
-        <div className="bg-[#1e1e1e]/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8">
-          <div className="text-center">
-            {status === "verifying" && (
-              <>
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mb-6 shadow-lg">
-                  <svg
-                    className="animate-spin h-8 w-8 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  Vérification en cours...
-                </h2>
-                <p className="text-gray-400">
-                  Veuillez patienter pendant que nous vérifions votre lien de
-                  connexion.
-                </p>
-              </>
-            )}
+      {/* Animated orbs - très subtiles */}
+      <div className="absolute inset-0 overflow-hidden" style={{ mixBlendMode: 'screen' }}>
+        {/* Orb Orange */}
+        <div 
+          className="absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-[70%] -translate-y-[60%] rounded-full blur-[140px] animate-pulse-slow"
+          style={{ 
+            background: 'radial-gradient(circle at center, rgba(244, 121, 32, 0.25) 0%, rgba(244, 121, 32, 0.15) 50%, transparent 100%)',
+          }}
+        ></div>
+        
+        {/* Orb Blue */}
+        <div 
+          className="absolute w-[700px] h-[700px] top-1/2 left-1/2 -translate-x-[30%] -translate-y-[40%] rounded-full blur-[130px] animate-pulse-slow"
+          style={{ 
+            background: 'radial-gradient(circle at center, rgba(0, 167, 225, 0.3) 0%, rgba(0, 167, 225, 0.18) 50%, transparent 100%)',
+            animationDelay: '1s',
+          }}
+        ></div>
+      </div>
 
-            {status === "success" && (
-              <>
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-6">
-                  <svg
-                    className="w-8 h-8 text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  Connexion réussie !
-                </h2>
-                <p className="text-gray-400">
-                  Redirection vers votre espace...
-                </p>
-              </>
-            )}
+      {/* Content - minimaliste */}
+      <div className="relative z-10 flex flex-col items-center animate-scale-in"
+        style={{
+          animation: 'scaleIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards'
+        }}
+      >
+        {status === "verifying" && (
+          <>
+            {/* Spinner minimaliste */}
+            <div className="relative w-12 h-12 mb-8">
+              <div className="absolute inset-0 rounded-full border-2 border-white/10"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#00A7E1] animate-spin"></div>
+            </div>
+            <p className="text-white/60 text-sm font-light tracking-wide">
+              Connexion en cours
+            </p>
+          </>
+        )}
 
-            {status === "error" && (
-              <>
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/20 mb-6">
-                  <svg
-                    className="w-8 h-8 text-red-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  Erreur de connexion
-                </h2>
-                <p className="text-gray-400">{errorMessage}</p>
-                <p className="text-sm text-gray-500 mt-4">
-                  Redirection vers la page de connexion...
-                </p>
-              </>
-            )}
-          </div>
-        </div>
+        {status === "success" && (
+          <>
+            <div className="w-12 h-12 mb-8 flex items-center justify-center">
+              <svg className="w-12 h-12 text-[#00A7E1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-white/60 text-sm font-light tracking-wide">
+              Connexion réussie
+            </p>
+          </>
+        )}
+
+        {status === "error" && (
+          <>
+            <div className="w-12 h-12 mb-8 flex items-center justify-center">
+              <svg className="w-12 h-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <p className="text-white/60 text-sm font-light tracking-wide mb-2">
+              {errorMessage}
+            </p>
+            <p className="text-white/30 text-xs font-light">
+              Redirection...
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
@@ -139,8 +116,11 @@ export default function VerifyPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f1419]">
-          <div className="text-white">Chargement...</div>
+        <div className="fixed inset-0 flex items-center justify-center bg-black">
+          <div className="relative w-12 h-12">
+            <div className="absolute inset-0 rounded-full border-2 border-white/10"></div>
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#00A7E1] animate-spin"></div>
+          </div>
         </div>
       }
     >

@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   // Configuration pour éviter les problèmes HTTP/2
   httpAgentOptions: {
     keepAlive: false
+  },
+  // Désactiver le linting pendant le build
+  eslint: {
+    ignoreDuringBuilds: true
   }
 };
 

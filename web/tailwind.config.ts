@@ -46,6 +46,17 @@ const config: Config = {
             active: "#252525",     // Active background
             disabled: "#0F0F0F",   // Disabled background
           }
+        },
+        // FairFair brand colors
+        fairfair: {
+          blue: {
+            DEFAULT: "#00A7E1",    // Bleu principal FairFair
+            hover: "#0090C4",      // Bleu hover FairFair
+            dark: "#007BA8",       // Bleu foncé FairFair
+          },
+          orange: "#F47920",       // Orange FairFair
+          pink: "#E94CA6",         // Rose FairFair
+          green: "#8DC63F",        // Vert FairFair
         }
       },
       fontFamily: {
