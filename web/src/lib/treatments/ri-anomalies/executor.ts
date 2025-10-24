@@ -39,6 +39,7 @@ async function loadMissions(): Promise<Mission[]> {
       has_ri:
         !!(row["SERVICE_B2CSDU_ORDER → external_id"] || "").trim() &&
         row["SERVICE_B2CSDU_ORDER → external_id"] !== "",
+      work_id: parseInt(row.work_id || "0", 10),
     }));
   } catch (error) {
     console.error("Error loading missions:", error);
@@ -123,6 +124,7 @@ async function executeSingle(
       ecartPercent: 0,
       status: "ok",
       detailsByPrescripteur: [],
+      work_ids: [],
     };
   }
 
@@ -184,6 +186,9 @@ async function executeSingle(
   // Sort details by prescripteur name
   detailsByPrescripteur.sort((a, b) => a.prescripteurName.localeCompare(b.prescripteurName));
 
+  // Extract unique work_ids from missions
+  const work_ids = Array.from(new Set(siretMissions.map(m => m.work_id).filter(id => id > 0)));
+
   return {
     siret,
     denomination,
@@ -193,6 +198,7 @@ async function executeSingle(
     ecartPercent: ecartPercentGlobal,
     status,
     detailsByPrescripteur,
+    work_ids,
   };
 }
 

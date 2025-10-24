@@ -1,6 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { RIAnomalyResult, RIThresholds, DEFAULT_RI_THRESHOLDS } from "@/lib/treatments/ri-anomalies/types";
 import * as XLSX from 'xlsx';
+
+interface Metier {
+  id: number;
+  name: string;
+}
 
 interface RIAnomalyBatchResultsProps {
   results: RIAnomalyResult[];
@@ -11,18 +16,48 @@ interface RIAnomalyBatchResultsProps {
 export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = DEFAULT_RI_THRESHOLDS }: RIAnomalyBatchResultsProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedSirets, setExpandedSirets] = useState<Set<string>>(new Set());
+  const [selectedMetiers, setSelectedMetiers] = useState<number[]>([]);
+  const [metiers, setMetiers] = useState<Metier[]>([]);
+  const [metiersDropdownOpen, setMetiersDropdownOpen] = useState(false);
   const resultsPerPage = 50;
 
-  // Statistiques
-  const totalAnalyzed = results.length;
-  const withWarning = results.filter(r => r.status === 'warning').length;
+  // Load métiers from API
+  useEffect(() => {
+    const loadMetiers = async () => {
+      try {
+        const response = await fetch('/api/data/metiers');
+        const data = await response.json();
+        if (data.success && data.metiers) {
+          setMetiers(data.metiers);
+        }
+      } catch (error) {
+        console.error('Error loading metiers:', error);
+      }
+    };
+    loadMetiers();
+  }, []);
+
+  // Filter results by selected métiers
+  const filteredResults = useMemo(() => {
+    if (selectedMetiers.length === 0) {
+      return results;
+    }
+    return results.filter(result => {
+      if (!result.work_ids || result.work_ids.length === 0) return false;
+      return result.work_ids.some(workId => selectedMetiers.includes(workId));
+    });
+  }, [results, selectedMetiers]);
+
+  // Statistiques sur les résultats filtrés
+  const totalAnalyzed = filteredResults.length;
+  const withWarning = filteredResults.filter(r => r.status === 'warning').length;
   const fraudPercentage = totalAnalyzed > 0 ? (withWarning / totalAnalyzed * 100).toFixed(1) : "0.0";
 
   // Pagination
   const totalPages = Math.ceil(totalAnalyzed / resultsPerPage);
   const startIndex = (currentPage - 1) * resultsPerPage;
   const endIndex = startIndex + resultsPerPage;
-  const paginatedResults = results.slice(startIndex, endIndex);
+  const paginatedResults = filteredResults.slice(startIndex, endIndex);
 
   // Export vers Excel avec détails par assureur
   const exportToCSV = () => {
@@ -144,8 +179,24 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
     return value.toFixed(1) + "%";
   };
 
+  const toggleMetier = (metierId: number) => {
+    setSelectedMetiers(prev => {
+      if (prev.includes(metierId)) {
+        return prev.filter(id => id !== metierId);
+      } else {
+        return [...prev, metierId];
+      }
+    });
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  const resetFilters = () => {
+    setSelectedMetiers([]);
+    setCurrentPage(1);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       {/* Card synthèse - style inspiré de "Traitement en cours" */}
       <div className="card-surface p-6">
         {/* Header compact */}
@@ -215,6 +266,88 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
             <span>Exporter en Excel (synthèse + détails par assureur)</span>
           </button>
         </div>
+      </div>
+
+      {/* Filtres sticky */}
+      <div className="sticky-header p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 flex-1">
+            <svg className="w-5 h-5 text-cursor-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            <div className="relative flex-1 max-w-md">
+              <button
+                onClick={() => setMetiersDropdownOpen(!metiersDropdownOpen)}
+                className="w-full px-4 py-2 text-left bg-cursor-bg-tertiary border border-cursor-border-primary rounded-lg hover:border-cursor-accent-button transition-colors flex items-center justify-between"
+              >
+                <span className="text-sm text-cursor-text-primary">
+                  {selectedMetiers.length === 0 
+                    ? 'Tous les métiers' 
+                    : `${selectedMetiers.length} métier${selectedMetiers.length > 1 ? 's' : ''} sélectionné${selectedMetiers.length > 1 ? 's' : ''}`}
+                </span>
+                <svg className={`w-4 h-4 text-cursor-text-secondary transition-transform ${metiersDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {metiersDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-cursor-bg-elevated border border-cursor-border-primary rounded-lg shadow-xl max-h-80 overflow-y-auto z-30">
+                  {metiers.map(metier => (
+                    <label
+                      key={metier.id}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-cursor-bg-tertiary cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMetiers.includes(metier.id)}
+                        onChange={() => toggleMetier(metier.id)}
+                        className="w-4 h-4 rounded border-cursor-border-primary text-cursor-accent-button focus:ring-cursor-accent-button"
+                      />
+                      <span className="text-sm text-cursor-text-primary">{metier.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {selectedMetiers.length > 0 && (
+            <button
+              onClick={resetFilters}
+              className="px-4 py-2 text-sm font-medium text-cursor-text-primary bg-cursor-bg-tertiary hover:bg-cursor-hover border border-cursor-border-primary rounded-lg transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Réinitialiser
+            </button>
+          )}
+        </div>
+
+        {selectedMetiers.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {selectedMetiers.map(metierId => {
+              const metier = metiers.find(m => m.id === metierId);
+              if (!metier) return null;
+              return (
+                <span
+                  key={metierId}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs"
+                >
+                  {metier.name}
+                  <button
+                    onClick={() => toggleMetier(metierId)}
+                    className="hover:text-blue-300 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Tableau des résultats */}
@@ -403,8 +536,8 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
         )}
       </div>
 
-      {/* Légende */}
-      <div className="card-surface p-4">
+      {/* Légende fixe en bas */}
+      <div className="sticky-footer p-4">
         <h3 className="text-sm font-semibold text-cursor-text-primary mb-3">Légende</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
           <div className="flex items-start gap-2">

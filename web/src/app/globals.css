@@ -525,3 +525,41 @@ body {
 .clickable-row:active {
   transform: scale(0.995);
 }
+
+/* Sticky header and footer for tables */
+.sticky-header {
+  position: sticky;
+  top: 56px; /* Height of main header */
+  z-index: 20;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(18, 18, 18, 0.9);
+  border-bottom: 1px solid var(--cursor-border-primary);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.sticky-footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(18, 18, 18, 0.95);
+  border-top: 1px solid var(--cursor-border-primary);
+  border-radius: 0.75rem 0.75rem 0 0;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.3);
+  max-width: 56rem;
+  width: calc(100% - 22rem);
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 1280px) {
+  .sticky-footer {
+    width: calc(100% - 2rem);
+    left: 1rem;
+    transform: none;
+  }
+}

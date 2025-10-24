@@ -11,6 +11,7 @@ export interface RIAnomalyResult {
   detailsByPrescripteur: PrescripteurDetail[];
   status_reseau?: number; // Pour filtrer U3/U4
   ranking?: number; // Pour le tri dans le mode batch
+  work_ids?: number[]; // Métiers associés aux missions
 }
 
 export interface RIAnomaliesResults {
@@ -45,6 +46,7 @@ export interface Mission {
   company_id: number;
   siret: string;
   has_ri: boolean; // True if SERVICE_B2CSDU_ORDER → external_id is not empty
+  work_id: number; // ID du métier
 }
 
 export interface Prescripteur {

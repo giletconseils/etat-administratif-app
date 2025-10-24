@@ -11,9 +11,10 @@ interface StepperProps {
   currentStep: number;
   onStepClick?: (stepId: number) => void;
   children?: React.ReactNode; // Contenu supplémentaire pour l'étape active
+  compact?: boolean; // Mode compact pour masquer les étapes non actives
 }
 
-export function Stepper({ steps, currentStep, onStepClick, children }: StepperProps) {
+export function Stepper({ steps, currentStep, onStepClick, children, compact = false }: StepperProps) {
   return (
     <div className="w-full py-4">
       {/* Version verticale pour sidebar */}
@@ -22,6 +23,11 @@ export function Stepper({ steps, currentStep, onStepClick, children }: StepperPr
           const isCompleted = step.id < currentStep;
           const isCurrent = step.id === currentStep;
           const isClickable = onStepClick && (isCompleted || isCurrent);
+          
+          // En mode compact, masquer les étapes non actives avec animation
+          if (compact && !isCurrent) {
+            return null;
+          }
           
           return (
             <React.Fragment key={step.id}>
