@@ -26,6 +26,7 @@ import { StatusSelector } from "@/components/StatusSelector";
 import { FileUploader } from "@/components/FileUploader";
 import { ResultsTable } from "@/components/ResultsTable";
 import { SiretSearchBar } from "@/components/SiretSearchBar";
+import { NetworkSearchBar } from "@/components/NetworkSearchBar";
 import { RIAnomalyResults } from "@/components/RIAnomalyResults";
 import { RIAnomalyBatchResults } from "@/components/RIAnomalyBatchResults";
 import { RIAnomalyResult, RIThresholds, DEFAULT_RI_THRESHOLDS } from "@/lib/treatments/ri-anomalies/types";

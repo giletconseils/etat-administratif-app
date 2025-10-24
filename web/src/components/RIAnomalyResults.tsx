@@ -282,8 +282,73 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
     );
   };
 
+  // Calculate fraud percentage
+  const fraudPercentage = globalStats.totalCompanies > 0 
+    ? ((globalStats.warnings / globalStats.totalCompanies) * 100).toFixed(1)
+    : '0.0';
+
   return (
     <div className="animate-fade-in-scale">
+      {/* Card synthèse - Analyse terminée */}
+      <div className="animated-border-green mb-6">
+        <div className="animated-border-green-content p-6">
+          {/* Header avec icône */}
+          <div className="flex items-center gap-3 mb-6">
+            <svg className="w-6 h-6 text-cursor-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-cursor-text-primary">Analyse terminée</h2>
+              <p className="text-sm text-cursor-text-secondary">
+                {globalStats.totalCompanies} intervenant{globalStats.totalCompanies > 1 ? 's' : ''} réseaux analysé{globalStats.totalCompanies > 1 ? 's' : ''} • {globalStats.totalMissions} mission{globalStats.totalMissions > 1 ? 's' : ''}
+              </p>
+            </div>
+          </div>
+
+          {/* Statistiques avec barre de progression */}
+          <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/10 space-y-3">
+            {/* Anomalies détectées */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-cursor-text-secondary">Anomalies RI</span>
+              <span className="text-sm font-semibold text-red-400">{globalStats.warnings} sous-déclaration{globalStats.warnings > 1 ? 's' : ''} ({fraudPercentage}%)</span>
+            </div>
+
+            {/* Barre de progression */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-cursor-text-muted">Taux de fraude potentielle</span>
+                <span className="text-blue-400 font-semibold tabular-nums">{fraudPercentage}%</span>
+              </div>
+              <div className="w-full bg-cursor-bg-tertiary rounded-full h-2 overflow-hidden border border-cursor-border-primary/30">
+                <div 
+                  className="bg-gradient-to-r from-red-500 to-orange-500 h-2 rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${Math.min(100, parseFloat(fraudPercentage))}%`,
+                    maxWidth: '100%'
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Statistiques compactes - style batch */}
+            <div className="pt-3 border-t border-blue-500/10 grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-blue-400">{globalStats.totalCompanies}</div>
+                <div className="text-xs text-cursor-text-muted">Analysés</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-red-400">{globalStats.warnings}</div>
+                <div className="text-xs text-cursor-text-muted">Anomalies</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-green-400">{globalStats.conformes + globalStats.excellents}</div>
+                <div className="text-xs text-cursor-text-muted">Conformes</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Filtres dans le header sticky (apparaissent au scroll) */}
       <div className="sticky-header -mx-6 transition-all duration-500 ease-out group-hover/tablegroup:mx-[-10%]">
         <div className={`
@@ -385,34 +450,9 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
         </div>
       </div>
 
-      <div className="animated-border-green mb-6 group/tablegroup overflow-hidden transition-all duration-500 ease-out hover:mx-[-10%] hover:shadow-2xl hover:shadow-blue-500/10">
-        <div className="animated-border-green-content p-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
-            <svg
-              className="w-6 h-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-cursor-text-primary">
-              Analyse des déclarations RI
-            </h2>
-            <p className="text-sm text-cursor-text-secondary">
-              Réparations à l&apos;Identique - Comparaison théorique vs réel ({filteredResults.length} entreprise{filteredResults.length > 1 ? 's' : ''})
-            </p>
-          </div>
-        </div>
+      {/* Filtres et résultats - Card principale */}
+      <div className="card-surface mb-6 group/tablegroup overflow-hidden transition-all duration-500 ease-out hover:mx-[-10%] hover:shadow-2xl hover:shadow-blue-500/10">
+        <div className="p-6">
 
         {/* Filtres normaux (visibles par défaut) */}
         <div className={`
@@ -516,49 +556,34 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
         )}
       </div>
 
-      {/* Global Summary */}
+      {/* Statistiques détaillées (seulement si plusieurs résultats) */}
       {filteredResults.length > 1 && (
-        <div className="bg-gradient-to-r from-blue-900/20 to-blue-900/20 border border-blue-500/30 rounded-lg p-6 mb-6">
-          <h3 className="text-lg font-semibold text-cursor-text-primary mb-4">Récapitulatif global</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="text-center p-3 bg-cursor-bg-secondary rounded-lg">
-              <div className="text-xl font-bold text-blue-400">{globalStats.totalCompanies}</div>
-              <div className="text-xs text-cursor-text-muted mt-1">Intervenants réseaux</div>
-            </div>
-            <div className="text-center p-3 bg-cursor-bg-secondary rounded-lg">
-              <div className="text-xl font-bold text-blue-400">{globalStats.totalMissions}</div>
+        <div className="card-surface p-4 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="text-center p-3 bg-cursor-bg-tertiary rounded-lg">
+              <div className="text-lg font-bold text-blue-400">{globalStats.totalMissions}</div>
               <div className="text-xs text-cursor-text-muted mt-1">Total Missions</div>
             </div>
-            <div className="text-center p-3 bg-cursor-bg-secondary rounded-lg">
-              <div className="text-xl font-bold text-blue-400">{formatNumber(globalStats.totalRITheorique)}</div>
+            <div className="text-center p-3 bg-cursor-bg-tertiary rounded-lg">
+              <div className="text-lg font-bold text-purple-400">{formatNumber(globalStats.totalRITheorique)}</div>
               <div className="text-xs text-cursor-text-muted mt-1">RI Théorique</div>
             </div>
-            <div className="text-center p-3 bg-cursor-bg-secondary rounded-lg">
-              <div className="text-xl font-bold text-green-400">{globalStats.totalRIReel}</div>
+            <div className="text-center p-3 bg-cursor-bg-tertiary rounded-lg">
+              <div className="text-lg font-bold text-green-400">{globalStats.totalRIReel}</div>
               <div className="text-xs text-cursor-text-muted mt-1">RI Déclaré</div>
             </div>
-          </div>
-          <div className="flex gap-4 justify-center pt-4 border-t border-cursor-border-primary">
-            <div className="text-center">
-              <div className="text-lg font-bold text-red-400">{globalStats.warnings}</div>
-              <div className="text-xs text-cursor-text-muted">⚠️ Sous-déclaration</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-bold text-green-400">{globalStats.conformes}</div>
-              <div className="text-xs text-cursor-text-muted">✓ Conforme</div>
-            </div>
-            <div className="text-center">
+            <div className="text-center p-3 bg-cursor-bg-tertiary rounded-lg">
               <div className="text-lg font-bold text-blue-400">{globalStats.excellents}</div>
-              <div className="text-xs text-cursor-text-muted">✨ Excellent</div>
+              <div className="text-xs text-cursor-text-muted mt-1">✨ Excellents</div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Individual Results */}
-      <div className="space-y-4">
-        {filteredResults.map(renderResultCard)}
-      </div>
+        {/* Individual Results */}
+        <div className="space-y-4">
+          {filteredResults.map(renderResultCard)}
+        </div>
         </div>
       </div>
     </div>
