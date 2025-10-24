@@ -22,6 +22,14 @@
   --cursor-accent-red: #EF4444;     /* Error red */
   --cursor-accent-orange: #F97316;  /* Warning orange */
   
+  /* FairFair brand colors */
+  --fairfair-blue: #00A7E1;         /* Bleu principal FairFair */
+  --fairfair-blue-hover: #0090C4;   /* Bleu hover FairFair */
+  --fairfair-blue-dark: #007BA8;    /* Bleu foncé FairFair */
+  --fairfair-orange: #F47920;       /* Orange FairFair */
+  --fairfair-pink: #E94CA6;         /* Rose FairFair */
+  --fairfair-green: #8DC63F;        /* Vert FairFair */
+  
   /* Border colors - subtle */
   --cursor-border-primary: #2A2A2A; /* Main borders - very subtle */
   --cursor-border-secondary: #333333; /* Secondary borders */

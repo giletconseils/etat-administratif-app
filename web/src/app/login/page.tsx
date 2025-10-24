@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 function LoginForm() {
@@ -10,6 +10,8 @@ function LoginForm() {
     type: "success" | "error" | "";
     text: string;
   }>({ type: "", text: "" });
+  const [mousePosition, setMousePosition] = useState({ x: 0.5, y: 0.5 });
+  const orbsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
@@ -27,6 +29,51 @@ function LoginForm() {
       });
     }
   }, [errorParam]);
+
+  // Track mouse position and animate orbs
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      setMousePosition({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    // Animate orbs based on mouse position
+    const animateOrbs = () => {
+      orbsRef.current.forEach((orb, index) => {
+        if (orb) {
+          // Different speeds and directions for each orb
+          const speed = [0.05, 0.08, 0.06, 0.07, 0.04][index] || 0.05;
+          const direction = [1, -1, 1, -1, 1][index] || 1;
+          
+          const currentTransform = orb.style.transform || '';
+          const currentX = parseFloat(currentTransform.match(/translateX\(([-\d.]+)px\)/)?.[1] || '0');
+          const currentY = parseFloat(currentTransform.match(/translateY\(([-\d.]+)px\)/)?.[1] || '0');
+          
+          // Calculate target position based on mouse
+          const targetX = (mousePosition.x - 0.5) * 100 * speed * direction;
+          const targetY = (mousePosition.y - 0.5) * 100 * speed * direction;
+          
+          // Smooth interpolation
+          const newX = currentX + (targetX - currentX) * 0.1;
+          const newY = currentY + (targetY - currentY) * 0.1;
+          
+          orb.style.transform = `translateX(${newX}px) translateY(${newY}px)`;
+        }
+      });
+      
+      requestAnimationFrame(animateOrbs);
+    };
+
+    const animationFrame = requestAnimationFrame(animateOrbs);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [mousePosition]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,7 +173,11 @@ function LoginForm() {
                   placeholder="nom@entreprise.fr"
                   required
                   disabled={isLoading}
-                  className="w-full px-4 py-3.5 bg-black/40 border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00A7E1]/50 focus:border-[#00A7E1]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    // @ts-ignore
+                    '--focus-ring-color': 'var(--fairfair-blue)',
+                  }}
+                  className="w-full px-4 py-3.5 bg-black/40 border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[color:var(--focus-ring-color)]/50 focus:border-[color:var(--focus-ring-color)]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed [--focus-ring-color:var(--fairfair-blue)]"
                 />
               </div>
             </div>
@@ -134,7 +185,20 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 px-4 bg-[#00A7E1] hover:bg-[#0090C4] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20"
+              style={{
+                backgroundColor: 'var(--fairfair-blue)',
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = 'var(--fairfair-blue-hover)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.backgroundColor = 'var(--fairfair-blue)';
+                }
+              }}
+              className="w-full py-3.5 px-4 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20"
             >
               {isLoading ? (
                 <>
