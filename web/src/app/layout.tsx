@@ -21,6 +21,11 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "État Administratif - Vérification SIRET",
   description: "Analyse du statut administratif des intervenants réseaux avec vérification SIRENE",
+  icons: {
+    icon: '/fairfair-icon.png',
+    shortcut: '/fairfair-icon.png',
+    apple: '/fairfair-icon.png',
+  },
 };
 
 export default function RootLayout({
