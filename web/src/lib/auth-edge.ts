@@ -23,7 +23,7 @@ export async function verifySessionToken(token: string): Promise<SessionTokenPay
     }
     
     return payload as unknown as SessionTokenPayload;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import Papa from "papaparse";
 import * as XLSX from 'xlsx';
 
@@ -819,7 +820,7 @@ function AnalysePageContent() {
             </div>
             
             {/* Bouton Retour en dessous */}
-            <a
+            <Link
               href="/"
               className="btn-standard btn-md btn-secondary btn-full"
             >
@@ -827,7 +828,7 @@ function AnalysePageContent() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span>Retour aux traitements</span>
-            </a>
+            </Link>
           </div>
 
           {/* Carte Progression avec bordure classique */}

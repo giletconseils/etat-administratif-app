@@ -65,7 +65,7 @@ export default function LoginPage() {
           text: data.message || "Une erreur est survenue.",
         });
       }
-    } catch (error) {
+    } catch {
       setMessage({
         type: "error",
         text: "Impossible de se connecter au serveur.",
@@ -221,7 +221,7 @@ export default function LoginPage() {
           {/* Footer info */}
           <div className="mt-8 text-center">
             <p className="text-xs text-gray-600">
-              En vous connectant, vous acceptez nos conditions d'utilisation
+              En vous connectant, vous acceptez nos conditions d&apos;utilisation
             </p>
           </div>
         </div>
