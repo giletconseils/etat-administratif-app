@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Vérification du token
-  const payload = verifyMagicToken(token);
+  const payload = await verifyMagicToken(token);
   if (!payload) {
     return NextResponse.redirect(
       new URL("/login?error=invalid-token", request.url)

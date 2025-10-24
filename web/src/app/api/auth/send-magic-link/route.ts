@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Génération du token
-    const token = generateMagicToken(email);
+    const token = await generateMagicToken(email);
     const appUrl = process.env.APP_URL || "http://localhost:3000";
     const magicLink = `${appUrl}/login/verify?token=${token}`;
 

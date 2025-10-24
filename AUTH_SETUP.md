@@ -65,9 +65,58 @@ L'application sera accessible sur http://localhost:3000
 4. Consultez votre boîte mail pour le lien de connexion
 5. Cliquez sur le lien pour vous connecter
 
-## 6. Production
+## 6. Déploiement sur Railway
 
-Pour la production, assurez-vous de :
+### Étape 1 : Générer le JWT_SECRET (en local, une seule fois)
+
+```bash
+openssl rand -base64 32
+# Résultat : kX7Hj9mP2wQ5vN8zL4yR6tU3bA1cD0eF... (copiez cette valeur)
+```
+
+### Étape 2 : Configurer les variables d'environnement sur Railway
+
+Dans le dashboard Railway de votre projet :
+
+1. Allez dans l'onglet **Variables**
+2. Ajoutez ces variables (cliquez sur **+ New Variable**) :
+
+```
+JWT_SECRET=kX7Hj9mP2wQ5vN8zL4yR6tU3bA1cD0eF...  (la valeur générée ci-dessus)
+RESEND_API_KEY=re_xxxxxxxxxxxxx                  (votre clé API Resend)
+APP_URL=https://votre-app.railway.app            (URL de votre app Railway)
+NODE_ENV=production
+MAGIC_LINK_EXPIRY=15m
+```
+
+### Étape 3 : Configurer le domaine d'envoi sur Resend
+
+1. Dans [Resend Dashboard](https://resend.com/domains), ajoutez votre domaine
+2. Configurez les enregistrements DNS (SPF, DKIM, DMARC)
+3. Attendez la vérification (quelques minutes)
+
+### Étape 4 : Déployer
+
+Railway détectera automatiquement votre application Next.js et la déploiera. Les variables d'environnement seront injectées automatiquement.
+
+### ⚠️ Important pour Railway
+
+- **JWT_SECRET** : Générez-le **localement** une seule fois, puis copiez-le dans Railway
+- **APP_URL** : Utilisez l'URL HTTPS fournie par Railway
+- **RESEND_API_KEY** : Créez une clé sur resend.com
+- Les cookies `secure` seront automatiquement activés en production (HTTPS)
+
+### Vérifier que tout fonctionne
+
+Après le déploiement :
+1. Accédez à votre URL Railway
+2. Vous serez redirigé vers `/login`
+3. Entrez un email de la whitelist
+4. Vérifiez votre boîte mail pour le magic link
+
+## 7. Production locale (pour tester avant Railway)
+
+Pour la production locale, assurez-vous de :
 
 1. Utiliser un JWT_SECRET fort et unique
 2. Configurer APP_URL avec votre domaine HTTPS

@@ -1,6 +1,8 @@
-import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "your-secret-key-change-in-production"
+);
 
 export interface SessionTokenPayload {
   email: string;
@@ -10,15 +12,17 @@ export interface SessionTokenPayload {
 
 /**
  * Vérifie et décode un token de session
- * Compatible avec Edge Runtime (pas de dépendances Node.js)
+ * Compatible avec Edge Runtime (utilise jose au lieu de jsonwebtoken)
  */
-export function verifySessionToken(token: string): SessionTokenPayload | null {
+export async function verifySessionToken(token: string): Promise<SessionTokenPayload | null> {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as SessionTokenPayload;
-    if (decoded.type !== "session") {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    
+    if (payload.type !== "session") {
       return null;
     }
-    return decoded;
+    
+    return payload as unknown as SessionTokenPayload;
   } catch (error) {
     return null;
   }

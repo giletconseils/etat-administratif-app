@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifySessionToken } from "@/lib/auth-edge";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Routes publiques qui ne nécessitent pas d'authentification
@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Vérifier la validité du token
-  const payload = verifySessionToken(sessionCookie.value);
+  const payload = await verifySessionToken(sessionCookie.value);
 
   if (!payload) {
     // Token invalide, supprimer le cookie et rediriger

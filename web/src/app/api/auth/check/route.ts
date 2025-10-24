@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const payload = verifySessionToken(sessionCookie.value);
+  const payload = await verifySessionToken(sessionCookie.value);
 
   if (!payload) {
     return NextResponse.json(

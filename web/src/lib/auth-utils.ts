@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import Papa from "papaparse";
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify } from "jose";
 
 // Réexporter les fonctions Edge-compatible
 export { verifySessionToken, type SessionTokenPayload } from "./auth-edge";
@@ -11,9 +11,11 @@ const AUTHORIZED_EMAILS_PATH = path.join(
   "../data/csv-files/config/authorized-emails.csv"
 );
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
-const MAGIC_LINK_EXPIRY: string | number = process.env.MAGIC_LINK_EXPIRY || "15m";
-const SESSION_EXPIRY: string | number = "7d";
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "your-secret-key-change-in-production"
+);
+const MAGIC_LINK_EXPIRY = process.env.MAGIC_LINK_EXPIRY || "15m";
+const SESSION_EXPIRY = "7d";
 
 export interface AuthorizedEmail {
   email: string;
@@ -68,26 +70,31 @@ export async function getNameForEmail(email: string): Promise<string | undefined
 /**
  * Génère un token JWT pour le magic link (courte durée)
  */
-export function generateMagicToken(email: string): string {
-  const payload: MagicTokenPayload = {
+export async function generateMagicToken(email: string): Promise<string> {
+  const token = await new SignJWT({
     email: email.toLowerCase().trim(),
     type: "magic",
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const options: any = { expiresIn: MAGIC_LINK_EXPIRY };
-  return jwt.sign(payload, JWT_SECRET, options);
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime(MAGIC_LINK_EXPIRY)
+    .setIssuedAt()
+    .sign(JWT_SECRET);
+  
+  return token;
 }
 
 /**
  * Vérifie et décode un token de magic link
  */
-export function verifyMagicToken(token: string): MagicTokenPayload | null {
+export async function verifyMagicToken(token: string): Promise<MagicTokenPayload | null> {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as MagicTokenPayload;
-    if (decoded.type !== "magic") {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    
+    if (payload.type !== "magic") {
       return null;
     }
-    return decoded;
+    
+    return payload as unknown as MagicTokenPayload;
   } catch (error) {
     console.error("Error verifying magic token:", error);
     return null;
@@ -99,14 +106,18 @@ export function verifyMagicToken(token: string): MagicTokenPayload | null {
  */
 export async function generateSessionToken(email: string): Promise<string> {
   const name = await getNameForEmail(email);
-  const payload = {
+  
+  const token = await new SignJWT({
     email: email.toLowerCase().trim(),
     name,
-    type: "session" as const,
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const options: any = { expiresIn: SESSION_EXPIRY };
-  return jwt.sign(payload, JWT_SECRET, options);
+    type: "session",
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime(SESSION_EXPIRY)
+    .setIssuedAt()
+    .sign(JWT_SECRET);
+  
+  return token;
 }
 
 /**
