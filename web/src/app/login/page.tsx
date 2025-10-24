@@ -14,6 +14,17 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
 
+  // Empêcher le scroll sur la page de login
+  useEffect(() => {
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   useEffect(() => {
     if (errorParam) {
       const errorMessages: Record<string, string> = {
@@ -65,52 +76,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f1419] p-4">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.15) 1px, transparent 0)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
+    <div className="h-screen w-screen overflow-hidden flex flex-col items-center justify-center bg-black relative">
+      {/* Background glow effects - style n8n */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Glow top left - violet */}
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-purple-600/20 rounded-full blur-[120px] animate-pulse"></div>
+        
+        {/* Glow top right - blue */}
+        <div className="absolute -top-32 -right-32 w-80 h-80 bg-blue-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+        
+        {/* Glow bottom - pink */}
+        <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-96 h-96 bg-pink-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      {/* Title outside card */}
+      <div className="relative z-10 text-center mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+          Connexion à votre espace
+        </h1>
+        <p className="text-sm text-gray-400">
+          Entrez votre email pour recevoir un lien de connexion
+        </p>
       </div>
 
       {/* Login card */}
-      <div className="relative w-full max-w-md">
-        <div className="bg-[#1e1e1e]/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8">
-          {/* Logo/Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mb-4 shadow-lg">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Connexion à votre espace
-            </h1>
-            <p className="text-sm text-gray-400">
-              Entrez votre email pour recevoir un lien de connexion
-            </p>
-          </div>
+      <div className="relative z-10 w-full max-w-md px-4">
+        <div className="bg-[#1a1a1a]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl p-8">
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-300 mb-2"
+                className="block text-sm font-medium text-gray-400 mb-2"
               >
                 Adresse email
               </label>
@@ -123,30 +121,15 @@ export default function LoginPage() {
                   placeholder="nom@entreprise.fr"
                   required
                   disabled={isLoading}
-                  className="w-full px-4 py-3 bg-[#2a2a2a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3.5 bg-black/40 border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg
-                    className="w-5 h-5 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                    />
-                  </svg>
-                </div>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-2xl hover:shadow-purple-500/20"
             >
               {isLoading ? (
                 <>
@@ -235,9 +218,8 @@ export default function LoginPage() {
 
           {/* Footer info */}
           <div className="mt-8 text-center">
-            <p className="text-xs text-gray-500">
-              En vous connectant, vous acceptez nos conditions d'utilisation et
-              notre politique de confidentialité.
+            <p className="text-xs text-gray-600">
+              En vous connectant, vous acceptez nos conditions d'utilisation
             </p>
           </div>
         </div>

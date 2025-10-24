@@ -36,6 +36,29 @@ function checkRateLimit(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérification de la configuration
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY is not configured");
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: "Service email non configuré. Contactez l'administrateur." 
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "your-secret-key-change-in-production") {
+      console.error("JWT_SECRET is not configured properly");
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: "Service d'authentification non configuré. Contactez l'administrateur." 
+        },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
     const { email } = body;
 
@@ -102,8 +125,19 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error in send-magic-link:", error);
+    
+    // Log plus détaillé pour le debugging
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+    
     return NextResponse.json(
-      { success: false, message: "Une erreur est survenue" },
+      { 
+        success: false, 
+        message: "Une erreur est survenue lors de l'envoi de l'email",
+        error: process.env.NODE_ENV === "development" ? String(error) : undefined
+      },
       { status: 500 }
     );
   }
