@@ -196,7 +196,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 group/results">
       {/* Card synthèse - style inspiré de "Traitement en cours" */}
       <div className="card-surface p-6">
         {/* Header compact avec bouton export */}
@@ -268,7 +268,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
       </div>
 
       {/* Filtres sticky */}
-      <div className="sticky-header p-4">
+      <div className="sticky-header p-4 transition-all duration-500 ease-out group-hover/results:mx-[-10%]">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1">
             <svg className="w-5 h-5 text-cursor-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -271,7 +271,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
   };
 
   return (
-    <div className="card-surface p-6 mb-6">
+    <div className="card-surface p-6 mb-6 group/results">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
@@ -300,7 +300,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
       </div>
 
       {/* Filtres sticky */}
-      <div className="sticky-header p-4 -mx-6 mb-6">
+      <div className="sticky-header p-4 -mx-6 mb-6 transition-all duration-500 ease-out group-hover/results:mx-[-10%]">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1">
             <svg className="w-5 h-5 text-cursor-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
