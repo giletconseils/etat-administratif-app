@@ -17,6 +17,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
   const [selectedMetiers, setSelectedMetiers] = useState<number[]>([]);
   const [metiers, setMetiers] = useState<Metier[]>([]);
   const [metiersDropdownOpen, setMetiersDropdownOpen] = useState(false);
+  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
 
   // Load métiers from API
   useEffect(() => {
@@ -32,6 +33,17 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
       }
     };
     loadMetiers();
+  }, []);
+
+  // Detect when header becomes sticky
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if we've scrolled past the summary section (roughly 400px)
+      setIsHeaderSticky(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Filter results by selected métiers
@@ -299,14 +311,18 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
         </div>
       </div>
 
-      {/* Filtres sticky */}
-      <div className="sticky-header p-4 -mx-6 mb-6 transition-all duration-500 ease-out group-hover/results:mx-[-10%]">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-1">
-            <svg className="w-5 h-5 text-cursor-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            <div className="relative flex-1 max-w-md">
+      {/* Filtres sticky avec animation reveal */}
+      <div className="sticky-header -mx-6 mb-6 transition-all duration-500 ease-out group-hover/results:mx-[-10%]">
+        <div className={`
+          transition-all duration-300 ease-out overflow-hidden
+          ${isHeaderSticky ? 'max-h-24 opacity-100 p-4' : 'max-h-0 opacity-0 p-0'}
+        `}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <svg className="w-5 h-5 text-cursor-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <div className="relative flex-1 max-w-md">
               <button
                 onClick={() => setMetiersDropdownOpen(!metiersDropdownOpen)}
                 className="w-full px-4 py-2 text-left bg-cursor-bg-tertiary border border-cursor-border-primary rounded-lg hover:border-cursor-accent-button transition-colors flex items-center justify-between"
@@ -359,43 +375,44 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
             </div>
           </div>
 
+            {selectedMetiers.length > 0 && (
+              <button
+                onClick={resetFilters}
+                className="px-4 py-2 text-sm font-medium text-cursor-text-primary bg-cursor-bg-tertiary hover:bg-cursor-hover border border-cursor-border-primary rounded-lg transition-colors flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Réinitialiser
+              </button>
+            )}
+          </div>
+
           {selectedMetiers.length > 0 && (
-            <button
-              onClick={resetFilters}
-              className="px-4 py-2 text-sm font-medium text-cursor-text-primary bg-cursor-bg-tertiary hover:bg-cursor-hover border border-cursor-border-primary rounded-lg transition-colors flex items-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Réinitialiser
-            </button>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {selectedMetiers.map(metierId => {
+                const metier = metiers.find(m => m.id === metierId);
+                if (!metier) return null;
+                return (
+                  <span
+                    key={metierId}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs"
+                  >
+                    {metier.name}
+                    <button
+                      onClick={() => toggleMetier(metierId)}
+                      className="hover:text-blue-300 transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
           )}
         </div>
-
-        {selectedMetiers.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {selectedMetiers.map(metierId => {
-              const metier = metiers.find(m => m.id === metierId);
-              if (!metier) return null;
-              return (
-                <span
-                  key={metierId}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs"
-                >
-                  {metier.name}
-                  <button
-                    onClick={() => toggleMetier(metierId)}
-                    className="hover:text-blue-300 transition-colors"
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </span>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Global Summary */}
