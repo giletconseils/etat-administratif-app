@@ -43,7 +43,7 @@ function AnalysePageContent() {
   const [selectedTreatments] = useState<TreatmentType[]>(
     treatmentParam ? [treatmentParam] : ['radiation-check']
   );
-  const [currentTab, setCurrentTab] = useState<string>('search');
+  const [currentTab, setCurrentTab] = useState<string>('network');
   const [minMissions, setMinMissions] = useState<number>(5); // Pour le mode batch RI
   const [riThresholds, setRiThresholds] = useState<RIThresholds>(DEFAULT_RI_THRESHOLDS); // Seuils RI chargés depuis l'API
   const [thresholdsLoaded, setThresholdsLoaded] = useState(false);
@@ -943,17 +943,17 @@ function AnalysePageContent() {
         {/* Step 1: Data Selection + Treatment Configuration */}
         {currentStep === 1 && (
             <div className="card-surface p-6">
-              <Tabs defaultValue="search" onValueChange={setCurrentTab}>
+              <Tabs defaultValue="network" onValueChange={setCurrentTab}>
                 <TabsList>
-                  <TabsTrigger value="search">Recherche SIRET/SIREN</TabsTrigger>
+                  <TabsTrigger value="network">Recherche IR</TabsTrigger>
                   <TabsTrigger value="base">Ensemble de sous-traitants</TabsTrigger>
                   <TabsTrigger value="csv">Fichier CSV</TabsTrigger>
-                  <TabsTrigger value="network">Recherche intervenant</TabsTrigger>
+                  <TabsTrigger value="search">Recherche SIRET/SIREN</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="search">
-                  <SiretSearchBar
-                    onSiretsChange={setManualSirets}
+                <TabsContent value="network">
+                  <NetworkSearchBar
+                    onSiretSelected={handleNetworkSelection}
                   />
                 </TabsContent>
 
@@ -1019,35 +1019,37 @@ function AnalysePageContent() {
                   />
                 </TabsContent>
 
-                <TabsContent value="network">
-                  <NetworkSearchBar
-                    onSiretSelected={handleNetworkSelection}
+                <TabsContent value="search">
+                  <SiretSearchBar
+                    onSiretsChange={setManualSirets}
                   />
                 </TabsContent>
               </Tabs>
               
-              {/* Action button for step 1 - lancer directement l'analyse */}
-              <div className="pt-4 border-t border-cursor-border-primary/20 mt-6">
-                <button
-                  onClick={runCompleteProcess}
-                  disabled={loading || !canRunAnalysis()}
-                  className="w-full text-white bg-blue-600 hover:bg-blue-700 font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  {loading ? (
-                    <>
-                      <div className="spinner-cursor"></div>
-                      <span>Analyse en cours...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Lancer l&apos;analyse</span>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </>
-                  )}
-                </button>
-              </div>
+              {/* Action button for step 1 - lancer directement l'analyse (caché pour l'onglet network car auto) */}
+              {currentTab !== 'network' && (
+                <div className="pt-4 border-t border-cursor-border-primary/20 mt-6">
+                  <button
+                    onClick={runCompleteProcess}
+                    disabled={loading || !canRunAnalysis()}
+                    className="w-full text-white bg-blue-600 hover:bg-blue-700 font-semibold py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="spinner-cursor"></div>
+                        <span>Analyse en cours...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Lancer l&apos;analyse</span>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
 
             {/* CURSOR-style file info - minimal like CURSOR */}
             {(fileProcessing.rows.length > 0 || manualSirets.length > 0) && (

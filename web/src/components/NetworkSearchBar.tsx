@@ -15,8 +15,10 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectedItemRef = useRef<HTMLDivElement>(null);
 
   // Debounce pour la recherche
   useEffect(() => {
@@ -48,6 +50,20 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
     return () => clearTimeout(timer);
   }, [searchText]);
 
+  // Scroll automatique vers l'élément sélectionné - toujours centré
+  useEffect(() => {
+    if (selectedItemRef.current && dropdownRef.current) {
+      // Petit délai pour s'assurer que le DOM est rendu
+      setTimeout(() => {
+        selectedItemRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+      }, 50);
+    }
+  }, [selectedIndex]);
+
   // Fermer le dropdown quand on clique à l'extérieur
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -58,6 +74,7 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
         !inputRef.current.contains(event.target as Node)
       ) {
         setShowDropdown(false);
+        setIsFocused(false);
       }
     }
 
@@ -71,6 +88,7 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
     setSuggestions([]);
     setShowDropdown(false);
     setSelectedIndex(-1);
+    setIsFocused(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -103,44 +121,63 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded border border-cursor-border-primary bg-cursor-bg-secondary flex items-center justify-center">
-            <svg
-              className="w-3 h-3 text-cursor-text-secondary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-          <div>
-            <h3 className="text-base font-medium text-cursor-text-primary">
-              Recherche d&apos;intervenant réseau
-            </h3>
-            <p className="text-sm text-cursor-text-secondary">
-              Tapez un nom d&apos;entreprise, SIRET ou nom de contact
-            </p>
+    <>
+      {/* Backdrop avec blur quand le champ est focus */}
+      {isFocused && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-all duration-300"
+          style={{ margin: '-1.5rem' }}
+        />
+      )}
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded border border-cursor-border-primary bg-cursor-bg-secondary flex items-center justify-center">
+              <svg
+                className="w-3 h-3 text-cursor-text-secondary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-medium text-cursor-text-primary">
+                Recherche d&apos;intervenant réseau
+              </h3>
+              <p className="text-sm text-cursor-text-secondary">
+                Tapez un nom d&apos;entreprise, SIRET ou nom de contact
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="relative">
+        <div className={`relative transition-all duration-300 ${isFocused ? 'scale-105 z-50' : 'scale-100'}`}>
         <input
           ref={inputRef}
           type="text"
+          role="combobox"
+          aria-expanded={showDropdown}
+          aria-controls="network-search-listbox"
+          aria-autocomplete="list"
+          aria-activedescendant={selectedIndex >= 0 ? `network-option-${selectedIndex}` : undefined}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            // Délai pour permettre le clic sur les suggestions
+            setTimeout(() => setIsFocused(false), 200);
+          }}
           placeholder="Ex: Assistance Biterroise, 81778883900014, abserrurerie..."
-          className="w-full px-4 py-3 border border-cursor-border-primary rounded bg-cursor-bg-primary text-cursor-text-primary placeholder-cursor-text-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 border border-cursor-border-primary rounded bg-cursor-bg-primary text-cursor-text-primary placeholder-cursor-text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
         />
 
         {loading && (
@@ -168,41 +205,74 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
           </div>
         )}
 
-        {/* Dropdown des suggestions */}
+        {/* Dropdown des suggestions - effet Dock macOS (ultra large) */}
         {showDropdown && suggestions.length > 0 && (
-          <div
-            ref={dropdownRef}
-            className="absolute z-50 w-full mt-1 bg-cursor-bg-secondary border border-cursor-border-primary rounded shadow-lg max-h-80 overflow-y-auto"
-          >
+          <div className="absolute z-50 left-1/2 -translate-x-1/2 w-[120%] min-w-[600px] mt-3">
+            {/* Dégradé de flou en haut */}
+            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black via-black/80 to-transparent z-10 pointer-events-none" />
+            
+            {/* Contenu scrollable */}
+            <div
+              ref={dropdownRef}
+              id="network-search-listbox"
+              role="listbox"
+              className="relative px-4 space-y-2 max-h-80 overflow-y-auto scrollbar-hide"
+              style={{ paddingTop: '10rem', paddingBottom: '10rem' }}
+            >
             {suggestions.map((result, index) => (
               <div
                 key={`${result.siret}-${index}`}
-                className={`px-4 py-3 cursor-pointer transition-colors ${
+                ref={index === selectedIndex ? selectedItemRef : null}
+                id={`network-option-${index}`}
+                role="option"
+                aria-selected={index === selectedIndex}
+                className={`px-6 py-3 cursor-pointer transition-all duration-300 ease-out rounded-xl origin-center ${
                   index === selectedIndex
-                    ? "bg-blue-500/20 border-l-2 border-blue-500"
-                    : "hover:bg-cursor-bg-tertiary"
+                    ? "border-2 border-blue-500 scale-[1.02]"
+                    : "border-2 border-transparent scale-100 hover:scale-[1.01]"
                 }`}
                 onClick={() => handleSelect(result)}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="font-medium text-cursor-text-primary truncate">
+                <div className="flex items-center justify-between gap-8">
+                  <span className={`font-semibold truncate transition-all duration-300 ${
+                    index === selectedIndex 
+                      ? "text-cursor-text-primary text-lg" 
+                      : "text-cursor-text-secondary text-base"
+                  }`}>
                     {result.name}
                   </span>
-                  <span className="text-sm text-cursor-text-muted font-mono flex-shrink-0">
-                    {result.siret}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className={`font-mono flex-shrink-0 transition-all duration-300 tracking-wider ${
+                      index === selectedIndex 
+                        ? "text-cursor-text-muted text-base font-medium" 
+                        : "text-cursor-text-muted text-sm"
+                    }`}>
+                      {result.siret}
+                    </span>
+                    {index === selectedIndex && (
+                      <span className="px-2 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded flex items-center gap-1.5 animate-pulse">
+                        <kbd className="font-mono">↵</kbd>
+                        <span>Valider</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
+            </div>
+            
+            {/* Dégradé de flou en bas */}
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black via-black/80 to-transparent z-10 pointer-events-none" />
           </div>
         )}
-      </div>
+        </div>
 
-      <div className="text-sm text-cursor-text-muted">
-        💡 Utilisez les flèches ↑↓ pour naviguer, Tab ou Entrée pour
-        sélectionner
+        <div className="text-sm text-cursor-text-muted">
+          💡 Utilisez les flèches ↑↓ pour naviguer, Tab ou Entrée pour
+          sélectionner
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
