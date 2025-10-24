@@ -70,7 +70,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
     return (
       <div 
         key={result.siret} 
-        className="bg-cursor-bg-tertiary border border-cursor-border-primary rounded-lg overflow-hidden mb-4 cursor-pointer hover:border-blue-500/50 transition-colors"
+        className="bg-cursor-bg-tertiary border border-cursor-border-primary rounded-lg overflow-hidden mb-4 clickable-row cursor-pointer hover:border-blue-500/50"
         onClick={() => toggleExpanded(result.siret)}
       >
         <div className="p-6">
@@ -128,8 +128,8 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
           <div className="flex items-center justify-between pt-4 border-t border-cursor-border-primary mb-4">
             <div className="flex items-center gap-2">
               <svg
-                className={`w-5 h-5 text-cursor-text-secondary transition-transform ${
-                  isExpanded ? "rotate-90" : ""
+                className={`w-5 h-5 text-cursor-text-secondary expand-icon ${
+                  isExpanded ? "expanded" : ""
                 }`}
                 fill="none"
                 stroke="currentColor"
@@ -153,7 +153,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
 
         {/* Details by Prescripteur - expandable */}
         {isExpanded && result.detailsByPrescripteur.length > 0 && (
-          <div className="bg-cursor-bg-secondary border-t border-cursor-border-primary p-6">
+          <div className="bg-cursor-bg-secondary border-t border-cursor-border-primary p-6 expandable-row-content table-row-expand-enter">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>

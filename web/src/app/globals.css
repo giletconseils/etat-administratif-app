@@ -460,3 +460,68 @@ body {
   box-shadow: 0 0 12px rgba(112, 141, 170, 0.8), 0 2px 6px rgba(0, 0, 0, 0.5);
   transform: scale(1.1);
 }
+
+/* Table row expansion animations */
+@keyframes expandRow {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+    transform: translateY(0);
+  }
+}
+
+@keyframes collapseRow {
+  from {
+    opacity: 1;
+    max-height: 1000px;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.table-row-expand-enter {
+  animation: expandRow 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+}
+
+.table-row-expand-exit {
+  animation: collapseRow 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+}
+
+/* Smooth transition for expandable rows */
+.expandable-row-content {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Arrow rotation animation for expand icons */
+.expand-icon {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.expand-icon.expanded {
+  transform: rotate(90deg);
+}
+
+/* Hover effect for clickable rows */
+.clickable-row {
+  transition: background-color 0.2s ease, transform 0.15s ease;
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.clickable-row:active {
+  transform: scale(0.995);
+}
