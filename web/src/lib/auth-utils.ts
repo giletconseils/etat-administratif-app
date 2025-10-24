@@ -3,6 +3,9 @@ import path from "path";
 import Papa from "papaparse";
 import jwt from "jsonwebtoken";
 
+// Réexporter les fonctions Edge-compatible
+export { verifySessionToken, type SessionTokenPayload } from "./auth-edge";
+
 const AUTHORIZED_EMAILS_PATH = path.join(
   process.cwd(),
   "../data/csv-files/config/authorized-emails.csv"
@@ -20,12 +23,6 @@ export interface AuthorizedEmail {
 export interface MagicTokenPayload {
   email: string;
   type: "magic";
-}
-
-export interface SessionTokenPayload {
-  email: string;
-  name?: string;
-  type: "session";
 }
 
 /**
@@ -102,29 +99,14 @@ export function verifyMagicToken(token: string): MagicTokenPayload | null {
  */
 export async function generateSessionToken(email: string): Promise<string> {
   const name = await getNameForEmail(email);
-  const payload: SessionTokenPayload = {
+  const payload = {
     email: email.toLowerCase().trim(),
     name,
-    type: "session",
+    type: "session" as const,
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const options: any = { expiresIn: SESSION_EXPIRY };
   return jwt.sign(payload, JWT_SECRET, options);
-}
-
-/**
- * Vérifie et décode un token de session
- */
-export function verifySessionToken(token: string): SessionTokenPayload | null {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as SessionTokenPayload;
-    if (decoded.type !== "session") {
-      return null;
-    }
-    return decoded;
-  } catch (error) {
-    return null;
-  }
 }
 
 /**
