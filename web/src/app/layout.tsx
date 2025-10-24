@@ -38,7 +38,7 @@ export default function RootLayout({
       <body className={`${sans.variable} ${mono.variable} antialiased bg-cursor-bg-primary text-cursor-text-primary`}>
         <div className="min-h-screen">
           {/* Header avec logo et navigation */}
-          <header className="fixed top-0 left-0 right-0 z-50 bg-cursor-bg-primary/95 backdrop-blur-md border-b border-white/[0.05]">
+          <header className="fixed top-0 left-0 right-0 z-50 bg-cursor-bg-primary/95 backdrop-blur-md border-b border-white/[0.08]">
             <div className="px-6 py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {/* Icône du logo - crop pour ne montrer que la partie graphique (gauche) */}
