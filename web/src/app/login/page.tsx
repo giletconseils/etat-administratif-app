@@ -144,7 +144,7 @@ function LoginForm() {
           className="absolute w-[900px] h-[900px] top-1/2 left-1/2 -translate-x-[40%] -translate-y-[40%] rounded-full blur-[140px] animate-float-delayed"
           style={{ 
             willChange: 'transform',
-            background: 'radial-gradient(circle at center, rgba(0, 167, 225, 0.55) 0%, rgba(0, 167, 225, 0.4) 35%, rgba(0, 167, 225, 0.22) 60%, transparent 100%)',
+            background: 'radial-gradient(circle at center, rgba(37, 99, 235, 0.55) 0%, rgba(37, 99, 235, 0.4) 35%, rgba(37, 99, 235, 0.22) 60%, transparent 100%)',
             '--mouse-x': '0px',
             '--mouse-y': '0px',
           } as React.CSSProperties}
@@ -185,11 +185,7 @@ function LoginForm() {
                   placeholder="nom@entreprise.fr"
                   required
                   disabled={isLoading}
-                  style={{
-                    // @ts-ignore
-                    '--focus-ring-color': 'var(--fairfair-blue)',
-                  }}
-                  className="w-full px-4 py-3.5 bg-black/40 border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[color:var(--focus-ring-color)]/50 focus:border-[color:var(--focus-ring-color)]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed [--focus-ring-color:var(--fairfair-blue)]"
+                  className="w-full px-4 py-3.5 bg-black/40 border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2563eb]/50 focus:border-[#2563eb]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -197,20 +193,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              style={{
-                backgroundColor: 'var(--fairfair-blue)',
-              }}
-              onMouseEnter={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.backgroundColor = 'var(--fairfair-blue-hover)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isLoading) {
-                  e.currentTarget.style.backgroundColor = 'var(--fairfair-blue)';
-                }
-              }}
-              className="w-full py-3.5 px-4 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20"
+              className="w-full py-3.5 px-4 bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20"
             >
               {isLoading ? (
                 <>
