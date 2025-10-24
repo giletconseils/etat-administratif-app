@@ -855,48 +855,6 @@ function AnalysePageContent() {
                       <span>Nouvelle analyse</span>
                     </button>
                   )}
-
-                  {/* Informations de vérification en cours */}
-                  {apiStreaming.streamingProgress && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-medium text-cursor-text-secondary">Progression</span>
-                        <span className="text-xs font-semibold text-blue-400 tabular-nums">
-                          {apiStreaming.streamingProgress.current} / {apiStreaming.streamingProgress.total}
-                        </span>
-                      </div>
-                      <div className="w-full bg-cursor-bg-secondary rounded-full h-1.5 mb-1.5 overflow-hidden border border-cursor-border-primary/30">
-                        <div 
-                          className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
-                          style={{ width: `${(apiStreaming.streamingProgress.current / apiStreaming.streamingProgress.total) * 100}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-cursor-text-muted truncate" title={apiStreaming.streamingProgress.message}>
-                        {apiStreaming.streamingProgress.message}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Informations de traitement par chunks */}
-                  {siretChunks.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-xs font-medium text-cursor-text-secondary">Chunks</span>
-                        <span className="text-xs font-semibold text-blue-400 tabular-nums">
-                          {chunkResults.filter(r => r !== null).length} / {siretChunks.length}
-                        </span>
-                      </div>
-                      <div className="w-full bg-cursor-bg-secondary rounded-full h-1.5 mb-1 overflow-hidden border border-cursor-border-primary/30">
-                        <div 
-                          className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
-                          style={{ width: `${(chunkResults.filter(r => r !== null).length / siretChunks.length) * 100}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-cursor-text-muted tabular-nums">
-                        {siretChunks.flat().length} SIRETs au total
-                      </p>
-                    </div>
-                  )}
                 </div>
               </Stepper>
             </div>
@@ -1153,6 +1111,44 @@ function AnalysePageContent() {
                   </div>
                 )}
                 
+                {/* Détails spécifiques au traitement radiation-check */}
+                {selectedTreatments[0] === 'radiation-check' && (loading || apiStreaming.streamingProgress) && (
+                  <div className="mt-3 space-y-2 pt-3 border-t border-blue-500/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-cursor-text-muted">Mode</span>
+                      <span className="text-xs font-medium text-cursor-text-primary">
+                        {currentTab === 'base' ? 'Analyse batch' : currentTab === 'csv' ? 'Fichier CSV' : 'Recherche SIRET'}
+                      </span>
+                    </div>
+                    {currentTab === 'base' && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-cursor-text-muted">Statuts analysés</span>
+                        <span className="text-xs font-medium text-cursor-text-primary">
+                          {Object.entries(enabledStatuses).filter(([, enabled]) => enabled).map(([status]) => status).join(', ') || 'Aucun'}
+                        </span>
+                      </div>
+                    )}
+                    {currentTab === 'search' && manualSirets.length > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-cursor-text-muted">SIRETs à analyser</span>
+                        <span className="text-xs font-medium text-blue-400">{manualSirets.length}</span>
+                      </div>
+                    )}
+                    {currentTab === 'csv' && siretList.length > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-cursor-text-muted">SIRETs détectés</span>
+                        <span className="text-xs font-medium text-blue-400">{siretList.length}</span>
+                      </div>
+                    )}
+                    {currentTab === 'csv' && phoneList.length > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-cursor-text-muted">Téléphones détectés</span>
+                        <span className="text-xs font-medium text-blue-400">{phoneList.length}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 {apiStreaming.streamingProgress && (
                   <>
                     <div className="flex items-center justify-between mb-2 mt-3">
@@ -1170,6 +1166,13 @@ function AnalysePageContent() {
                         }}
                       ></div>
                     </div>
+                    {apiStreaming.streamingProgress.message && (
+                      <div className="mt-2 p-2 rounded bg-cursor-bg-tertiary/50 border border-blue-500/20">
+                        <p className="text-xs text-cursor-text-muted truncate" title={apiStreaming.streamingProgress.message}>
+                          {apiStreaming.streamingProgress.message}
+                        </p>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
