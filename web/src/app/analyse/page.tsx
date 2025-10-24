@@ -284,6 +284,31 @@ function AnalysePageContent() {
     return selectedTreatments.length > 0 && (manualSirets.length > 0 || fileProcessing.rows.length > 0 || true);
   };
 
+  // Fonction pour gérer la sélection d'un intervenant depuis la recherche réseau
+  const handleNetworkSelection = async (siret: string, name: string) => {
+    console.log(`[DEBUG] Intervenant sélectionné: ${name} (SIRET: ${siret})`);
+    
+    // Passer à l'étape 2 (Traitement en cours)
+    setCurrentStep(2);
+    setLoading(true);
+    setChecked(null);
+    
+    try {
+      console.log('[DEBUG] ⏳ Lancement de l\'analyse pour le SIRET sélectionné...');
+      const apiResults = await apiStreaming.streamApiResults([siret], []);
+      console.log('[DEBUG] ✅ Résultats reçus:', apiResults.length);
+      
+      const enrichedResults = enrichWithAmounts(apiResults, csvAmountMap);
+      setChecked(enrichedResults);
+      
+      console.log('[DEBUG] 🏁 Analyse terminée pour l\'intervenant réseau');
+    } catch (error) {
+      console.error('Erreur lors de l\'analyse de l\'intervenant:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fonction pour scinder les SIRETs en chunks optimisés pour la rapidité
   const createSiretChunks = (sirets: string[]): string[][] => {
     // Calcul basé sur les limites HTTP/2 et API INSEE :
@@ -923,6 +948,7 @@ function AnalysePageContent() {
                   <TabsTrigger value="search">Recherche SIRET/SIREN</TabsTrigger>
                   <TabsTrigger value="base">Ensemble de sous-traitants</TabsTrigger>
                   <TabsTrigger value="csv">Fichier CSV</TabsTrigger>
+                  <TabsTrigger value="network">Recherche intervenant</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="search">
@@ -990,6 +1016,12 @@ function AnalysePageContent() {
                     headerMap={fileProcessing.headerMap}
                     detectionType={fileProcessing.detectionType}
                     onHeaderMapChange={fileProcessing.setHeaderMap}
+                  />
+                </TabsContent>
+
+                <TabsContent value="network">
+                  <NetworkSearchBar
+                    onSiretSelected={handleNetworkSelection}
                   />
                 </TabsContent>
               </Tabs>

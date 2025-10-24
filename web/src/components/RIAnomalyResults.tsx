@@ -450,15 +450,11 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
         </div>
       </div>
 
-      {/* Filtres et résultats - Card principale */}
-      <div className="card-surface mb-6 group/tablegroup overflow-hidden transition-all duration-500 ease-out hover:mx-[-10%] hover:shadow-2xl hover:shadow-blue-500/10">
-        <div className="p-6">
-
-        {/* Filtres normaux (visibles par défaut) */}
-        <div className={`
-          -mx-6 px-6 py-4 bg-cursor-bg-secondary border-b border-cursor-border-primary/30 mb-6 transition-all duration-300 ease-out
-          ${filtersInHeader ? 'opacity-0 -translate-y-4 pointer-events-none h-0 mb-0 p-0 border-0 overflow-hidden' : 'opacity-100 translate-y-0'}
-        `}>
+      {/* Card filtre séparée - visible par défaut */}
+      <div className={`
+        card-surface p-4 mb-4 transition-all duration-300 ease-out
+        ${filtersInHeader ? 'opacity-0 -translate-y-4 pointer-events-none h-0 mb-0 p-0 overflow-hidden' : 'opacity-100 translate-y-0'}
+      `}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1">
             <svg className="w-5 h-5 text-cursor-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -580,6 +576,9 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
         </div>
       )}
 
+      {/* Card résultats */}
+      <div className="card-surface mb-6 group/tablegroup overflow-hidden transition-all duration-500 ease-out hover:mx-[-10%] hover:shadow-2xl hover:shadow-blue-500/10">
+        <div className="p-6">
         {/* Individual Results */}
         <div className="space-y-4">
           {filteredResults.map(renderResultCard)}
