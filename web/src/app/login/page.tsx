@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -13,17 +13,6 @@ export default function LoginPage() {
 
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
-
-  // Empêcher le scroll sur la page de login
-  useEffect(() => {
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    
-    return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
-    };
-  }, []);
 
   useEffect(() => {
     if (errorParam) {
@@ -85,22 +74,22 @@ export default function LoginPage() {
         }}></div>
       </div>
 
-      {/* Animated gradient orbs - style n8n */}
+      {/* Animated gradient orbs - couleurs FairFair */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Orb 1 - Purple */}
-        <div className="absolute w-[500px] h-[500px] -top-48 -left-32 bg-gradient-to-br from-purple-600/30 via-purple-500/20 to-transparent rounded-full blur-[100px] animate-float"></div>
+        {/* Orb 1 - Orange FairFair */}
+        <div className="absolute w-[500px] h-[500px] -top-48 -left-32 bg-gradient-to-br from-orange-500/30 via-orange-400/20 to-transparent rounded-full blur-[100px] animate-float"></div>
         
-        {/* Orb 2 - Blue */}
-        <div className="absolute w-[450px] h-[450px] top-20 -right-40 bg-gradient-to-br from-blue-500/25 via-cyan-500/15 to-transparent rounded-full blur-[90px] animate-float-delayed"></div>
+        {/* Orb 2 - Blue FairFair */}
+        <div className="absolute w-[450px] h-[450px] top-20 -right-40 bg-gradient-to-br from-[#00A7E1]/25 via-blue-400/15 to-transparent rounded-full blur-[90px] animate-float-delayed"></div>
         
-        {/* Orb 3 - Pink */}
-        <div className="absolute w-[550px] h-[550px] -bottom-48 left-1/4 bg-gradient-to-br from-pink-600/20 via-rose-500/15 to-transparent rounded-full blur-[110px] animate-float-slow"></div>
+        {/* Orb 3 - Pink FairFair */}
+        <div className="absolute w-[550px] h-[550px] -bottom-48 left-1/4 bg-gradient-to-br from-pink-500/20 via-pink-400/15 to-transparent rounded-full blur-[110px] animate-float-slow"></div>
         
-        {/* Orb 4 - Teal */}
-        <div className="absolute w-[400px] h-[400px] bottom-20 right-1/4 bg-gradient-to-br from-teal-500/15 via-emerald-500/10 to-transparent rounded-full blur-[85px] animate-float-delayed-2"></div>
+        {/* Orb 4 - Green FairFair */}
+        <div className="absolute w-[400px] h-[400px] bottom-20 right-1/4 bg-gradient-to-br from-green-500/15 via-lime-400/10 to-transparent rounded-full blur-[85px] animate-float-delayed-2"></div>
         
-        {/* Orb 5 - Indigo (center) */}
-        <div className="absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-indigo-600/10 via-purple-500/5 to-transparent rounded-full blur-[120px] animate-pulse-slow"></div>
+        {/* Orb 5 - Blue center */}
+        <div className="absolute w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-br from-[#00A7E1]/10 via-blue-500/5 to-transparent rounded-full blur-[120px] animate-pulse-slow"></div>
       </div>
 
       {/* Content wrapper - centered */}
@@ -137,7 +126,7 @@ export default function LoginPage() {
                   placeholder="nom@entreprise.fr"
                   required
                   disabled={isLoading}
-                  className="w-full px-4 py-3.5 bg-black/40 border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-3.5 bg-black/40 border border-white/[0.1] rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#00A7E1]/50 focus:border-[#00A7E1]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -145,7 +134,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-2xl hover:shadow-purple-500/20"
+              className="w-full py-3.5 px-4 bg-[#00A7E1] hover:bg-[#0090C4] text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20"
             >
               {isLoading ? (
                 <>
@@ -242,6 +231,27 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  // Empêcher le scroll sur la page de login
+  useEffect(() => {
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
 
