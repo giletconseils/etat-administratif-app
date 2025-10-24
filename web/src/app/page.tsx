@@ -22,7 +22,7 @@ export default function HomePage() {
     },
     {
       id: "anomalies",
-      name: "Détection d'anomalies",
+      name: "Détecteur de RI",
       color: "orange",
       treatments: [
         {

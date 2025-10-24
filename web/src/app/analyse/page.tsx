@@ -45,6 +45,7 @@ function AnalysePageContent() {
   const [minMissions, setMinMissions] = useState<number>(5); // Pour le mode batch RI
   const [riThresholds, setRiThresholds] = useState<RIThresholds>(DEFAULT_RI_THRESHOLDS); // Seuils RI chargés depuis l'API
   const [thresholdsLoaded, setThresholdsLoaded] = useState(false);
+  const [isTransitioningToStep3, setIsTransitioningToStep3] = useState(false);
   
   // État principal
   const [checked, setChecked] = useState<Checked[] | null>(null);
@@ -115,12 +116,24 @@ function AnalysePageContent() {
     }
   }, [selectedTreatments, thresholdsLoaded]);
 
+  // Gestion de la transition animée vers l'étape 3
+  const transitionToStep3 = () => {
+    if (currentStep < 3 && !isTransitioningToStep3) {
+      // Déclencher l'animation avant de passer à l'étape 3
+      setIsTransitioningToStep3(true);
+      // Attendre la fin de l'animation (1.2s) avant de passer à l'étape 3
+      setTimeout(() => {
+        setCurrentStep(3);
+        setIsTransitioningToStep3(false);
+      }, 1200);
+    }
+  };
+
   useEffect(() => {
     if (isAnalysisComplete && currentStep === 2) {
-      // Petit délai pour une transition fluide
-      const timer = setTimeout(() => setCurrentStep(3), 300);
-      return () => clearTimeout(timer);
+      transitionToStep3();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAnalysisComplete, currentStep]);
 
   // Calculs dérivés
@@ -787,46 +800,39 @@ function AnalysePageContent() {
   return (
     <div className="min-h-screen bg-cursor-bg-primary flex">
       {/* Sidebar fixe avec style professionnel - avec padding-top pour le header */}
-      <aside className="w-80 bg-gradient-to-b from-cursor-bg-elevated via-cursor-bg-tertiary to-cursor-bg-secondary border-r border-cursor-border-primary/10 fixed left-0 top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
+      <aside className="w-80 bg-gradient-to-b from-cursor-bg-elevated via-cursor-bg-tertiary to-cursor-bg-secondary border-r border-white/[0.02] fixed left-0 top-14 h-[calc(100vh-3.5rem)] overflow-y-auto">
         <div className="p-6">
-          {/* Title section avec séparateur élégant */}
-          <div className="mb-8 pb-5 relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`w-9 h-9 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md ${
-                selectedTreatments[0] === 'ri-anomalies' 
-                  ? 'from-cursor-accent-orange to-cursor-accent-orange glow-cursor-blue' 
-                  : 'from-cursor-accent-button to-cursor-accent-button-hover glow-cursor-blue'
-              }`}>
-                {selectedTreatments[0] === 'ri-anomalies' ? (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                )}
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-cursor-text-primary leading-tight">
-                  {selectedTreatments[0] === 'ri-anomalies' 
-                    ? 'Détection d\'anomalies RI' 
-                    : 'Analyse d\'intervenants réseaux'}
-                </h1>
-              </div>
+          {/* Carte Titre + Bouton Retour */}
+          <div className="card-surface p-5 mb-6">
+            {/* Titre */}
+            <div className="mb-4">
+              <h1 className="text-xl font-bold text-cursor-text-primary leading-tight mb-1.5">
+                {selectedTreatments[0] === 'ri-anomalies' 
+                  ? 'Détecteur de RI' 
+                  : 'Analyse d\'intervenants réseaux'}
+              </h1>
+              <p className="text-sm text-cursor-text-secondary leading-relaxed">
+                {selectedTreatments[0] === 'ri-anomalies'
+                  ? 'Analyse des déclarations de Réparations à l\'Identique'
+                  : 'Vérification des radiations et procédures collectives'}
+              </p>
             </div>
-            <p className="text-xs text-cursor-text-secondary leading-relaxed pl-12">
-              {selectedTreatments[0] === 'ri-anomalies'
-                ? 'Analyse des déclarations de Réparations à l\'Identique'
-                : 'Vérification des radiations et procédures collectives'}
-            </p>
-            {/* Séparateur élégant avec dégradé */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cursor-border-primary/15 to-transparent"></div>
+            
+            {/* Bouton Retour en dessous */}
+            <a
+              href="/"
+              className="btn-standard btn-md btn-secondary btn-full"
+            >
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>Retour aux traitements</span>
+            </a>
           </div>
 
-          {/* Carte Progression avec bordure animée ou verte si terminé */}
-          <div className={`mb-6 ${currentStep === 3 ? 'border border-green-500/40 rounded-xl' : 'animated-border'}`}>
-            <div className={`p-4 ${currentStep === 3 ? 'bg-cursor-bg-secondary rounded-xl' : 'animated-border-content'}`}>
+          {/* Carte Progression avec bordure classique */}
+          <div className="mb-6 card-surface">
+            <div className="p-4">
               {/* Header avec progression */}
               <div className="flex items-center gap-2 mb-4">
                 <div className={`w-2 h-2 rounded-full animate-pulse ${currentStep === 3 ? 'bg-green-500' : 'bg-blue-500'}`}></div>
@@ -839,8 +845,15 @@ function AnalysePageContent() {
               <Stepper 
                 steps={wizardSteps} 
                 currentStep={currentStep}
-                onStepClick={(stepId) => setCurrentStep(stepId as 1 | 2 | 3)}
+                onStepClick={(stepId) => {
+                  if (stepId === 3) {
+                    transitionToStep3();
+                  } else {
+                    setCurrentStep(stepId as 1 | 2 | 3);
+                  }
+                }}
                 compact={currentStep === 3}
+                isAnimatingCollapse={isTransitioningToStep3}
               >
                 {/* Contenu affiché sous l'étape active */}
                 <div className="space-y-3">
@@ -1070,7 +1083,8 @@ function AnalysePageContent() {
 
         {/* Step 2: Traitement en cours - affiche les données en cours de traitement */}
         {currentStep === 2 && (
-          <div className="card-surface p-6 mb-6">
+          <div className="animated-border mb-6 animate-fade-in">
+            <div className="animated-border-content p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 rounded-lg bg-cursor-accent-button flex items-center justify-center shadow-md glow-cursor-blue animate-pulse">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1223,6 +1237,7 @@ function AnalysePageContent() {
                   <span>Arrêter l&apos;analyse</span>
                 </button>
               )}
+            </div>
             </div>
           </div>
         )}
@@ -1434,6 +1449,7 @@ function AnalysePageContent() {
             stats={stats}
             onExport={exportToExcel}
             activeTreatments={selectedTreatments}
+            currentStep={currentStep}
           />
         )}
         </div>

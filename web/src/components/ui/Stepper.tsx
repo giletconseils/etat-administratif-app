@@ -12,9 +12,10 @@ interface StepperProps {
   onStepClick?: (stepId: number) => void;
   children?: React.ReactNode; // Contenu supplémentaire pour l'étape active
   compact?: boolean; // Mode compact pour masquer les étapes non actives
+  isAnimatingCollapse?: boolean; // Animation de repli vers l'étape finale
 }
 
-export function Stepper({ steps, currentStep, onStepClick, children, compact = false }: StepperProps) {
+export function Stepper({ steps, currentStep, onStepClick, children, compact = false, isAnimatingCollapse = false }: StepperProps) {
   return (
     <div className="w-full py-4">
       {/* Version verticale pour sidebar */}
@@ -24,14 +25,18 @@ export function Stepper({ steps, currentStep, onStepClick, children, compact = f
           const isCurrent = step.id === currentStep;
           const isClickable = onStepClick && (isCompleted || isCurrent);
           
-          // En mode compact, masquer les étapes non actives avec animation
-          if (compact && !isCurrent) {
+          // En mode compact, masquer les étapes non actives
+          if (compact && !isCurrent && !isAnimatingCollapse) {
             return null;
           }
           
+          // Pendant l'animation vers l'étape 3, les étapes 1 et 2 disparaissent
+          const shouldAnimate = isAnimatingCollapse && step.id < 3;
+          const animationClass = shouldAnimate ? `step-fade-out-${step.id}` : '';
+          
           return (
             <React.Fragment key={step.id}>
-              <div className="flex items-start gap-4 group">
+              <div className={`flex items-start gap-4 group ${animationClass}`}>
                 {/* Step circle with enhanced animations */}
                 <div className="relative flex-shrink-0">
                   <button

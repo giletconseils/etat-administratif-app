@@ -283,7 +283,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
   };
 
   return (
-    <>
+    <div className="animate-fade-in-scale">
       {/* Filtres dans le header sticky (apparaissent au scroll) */}
       <div className="sticky-header -mx-6 transition-all duration-500 ease-out group-hover/tablegroup:mx-[-10%]">
         <div className={`
@@ -385,7 +385,8 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
         </div>
       </div>
 
-      <div className="card-surface p-6 mb-6 group/tablegroup overflow-hidden transition-all duration-500 ease-out hover:mx-[-10%] hover:shadow-2xl hover:shadow-blue-500/10">
+      <div className="animated-border-green mb-6 group/tablegroup overflow-hidden transition-all duration-500 ease-out hover:mx-[-10%] hover:shadow-2xl hover:shadow-blue-500/10">
+        <div className="animated-border-green-content p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
@@ -558,8 +559,9 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
       <div className="space-y-4">
         {filteredResults.map(renderResultCard)}
       </div>
+        </div>
+      </div>
     </div>
-    </>
   );
 }
 

@@ -9,6 +9,7 @@ interface ResultsTableProps {
   stats: { total: number; current: number } | null;
   onExport: () => void;
   activeTreatments?: TreatmentType[]; // Track which treatments are active for conditional column display
+  currentStep?: 1 | 2 | 3; // Current step for styling
 }
 
 export function ResultsTable({ 
@@ -17,7 +18,8 @@ export function ResultsTable({
   streamingProgress, 
   stats, 
   onExport,
-  activeTreatments = ['radiation-check'] // Default to radiation-check for backward compatibility
+  activeTreatments = ['radiation-check'], // Default to radiation-check for backward compatibility
+  currentStep = 2 // Default to step 2
 }: ResultsTableProps) {
   // Si l'analyse est terminée et qu'il n'y a aucun résultat
   const isAnalysisComplete = !streamingProgress && stats && stats.current > 0;
@@ -37,8 +39,9 @@ export function ResultsTable({
 
   if (hasNoResults) {
     return (
-      <div className="mt-6">
-        <div className="card-surface rounded-lg p-6">
+      <div className="mt-6 animate-fade-in-scale">
+        <div className={currentStep === 3 ? 'animated-border-green rounded-lg' : 'card-surface rounded-lg'}>
+          <div className={`p-6 ${currentStep === 3 ? 'animated-border-green-content rounded-lg' : ''}`}>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center flex-shrink-0">
               <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,13 +57,14 @@ export function ResultsTable({
               </p>
             </div>
           </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 animate-fade-in-scale">
       {/* Header section résultats avec design élégant */}
       <div className="mb-6 relative">
         <div className="flex items-center justify-between gap-3 mb-4">
@@ -94,7 +98,8 @@ export function ResultsTable({
           )}
         </div>
         
-        <div className="card-surface p-4 rounded-xl border border-[#2a2a2a] shadow-md">
+        <div className={`p-4 rounded-xl shadow-md ${currentStep === 3 && !streamingProgress ? 'animated-border-green' : 'card-surface border border-[#2a2a2a]'}`}>
+          <div className={currentStep === 3 && !streamingProgress ? 'animated-border-green-content rounded-lg p-4 -m-4' : ''}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -127,6 +132,7 @@ export function ResultsTable({
                 Exporter
               </button>
             )}
+          </div>
           </div>
         </div>
         

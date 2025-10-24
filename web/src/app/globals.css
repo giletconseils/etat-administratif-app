@@ -357,12 +357,42 @@ body {
   }
 }
 
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeOutScale {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-20px);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.2s ease-in-out;
 }
 
 .animate-slide-up {
   animation: slideUp 0.3s ease-out;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-fade-out-scale {
+  animation: fadeOutScale 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 /* CURSOR-style loading spinner */
@@ -412,6 +442,35 @@ body {
   50% {
     opacity: 0.6;
   }
+}
+
+/* Stepper collapse animations for step completion */
+@keyframes fadeOutCollapse {
+  0% {
+    opacity: 1;
+    max-height: 200px;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-20px);
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.step-fade-out-1 {
+  animation: fadeOutCollapse 0.6s ease-out forwards;
+}
+
+.step-fade-out-2 {
+  animation: fadeOutCollapse 0.6s ease-out 0.4s forwards;
+  animation-delay: 0.4s;
 }
 
 .animate-shimmer {
@@ -542,6 +601,27 @@ body {
   }
 }
 
+@keyframes borderColorTransition {
+  0% {
+    background: linear-gradient(90deg, 
+      rgba(59, 130, 246, 0.1) 0%, 
+      rgba(59, 130, 246, 0.3) 25%, 
+      rgba(96, 165, 250, 0.4) 50%, 
+      rgba(59, 130, 246, 0.3) 75%, 
+      rgba(59, 130, 246, 0.1) 100%
+    );
+  }
+  100% {
+    background: linear-gradient(90deg, 
+      rgba(34, 197, 94, 0.1) 0%, 
+      rgba(34, 197, 94, 0.3) 25%, 
+      rgba(74, 222, 128, 0.4) 50%, 
+      rgba(34, 197, 94, 0.3) 75%, 
+      rgba(34, 197, 94, 0.1) 100%
+    );
+  }
+}
+
 .animated-border {
   position: relative;
   background: linear-gradient(90deg, 
@@ -555,18 +635,45 @@ body {
   animation: rotateBorder 3s ease-in-out infinite;
   border-radius: 0.75rem;
   padding: 1px;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .animated-border-content {
   background: var(--cursor-bg-secondary);
   border-radius: 0.75rem;
   backdrop-filter: blur(12px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .animated-border-content-circle {
   background: var(--cursor-bg-secondary);
   border-radius: 9999px;
   backdrop-filter: blur(12px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animated border green variant for completed state */
+.animated-border-green {
+  position: relative;
+  background: linear-gradient(90deg, 
+    rgba(34, 197, 94, 0.1) 0%, 
+    rgba(34, 197, 94, 0.3) 25%, 
+    rgba(74, 222, 128, 0.4) 50%, 
+    rgba(34, 197, 94, 0.3) 75%, 
+    rgba(34, 197, 94, 0.1) 100%
+  );
+  background-size: 200% 100%;
+  animation: rotateBorder 3s ease-in-out infinite;
+  border-radius: 0.75rem;
+  padding: 1px;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animated-border-green-content {
+  background: var(--cursor-bg-secondary);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(12px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Custom range slider styling */

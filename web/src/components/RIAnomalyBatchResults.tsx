@@ -196,9 +196,10 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in-scale">
       {/* Card synthèse - style inspiré de "Traitement en cours" */}
-      <div className="card-surface p-6">
+      <div className="animated-border-green">
+        <div className="animated-border-green-content p-6">
         {/* Header compact avec bouton export */}
         <div className="flex items-center justify-between gap-3 mb-6">
           <div className="flex items-center gap-3">
@@ -264,6 +265,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
               <div className="text-xs text-cursor-text-muted">Conformes</div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 

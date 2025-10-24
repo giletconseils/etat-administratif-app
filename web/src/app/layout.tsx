@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
+import { LogoutButton } from "@/components/LogoutButton";
 
 const sans = Inter({
   variable: "--font-sans",
@@ -32,7 +33,7 @@ export default function RootLayout({
       <body className={`${sans.variable} ${mono.variable} antialiased bg-cursor-bg-primary text-cursor-text-primary`}>
         <div className="min-h-screen">
           {/* Header avec logo et navigation */}
-          <header className="fixed top-0 left-0 right-0 z-50 bg-cursor-bg-primary/95 backdrop-blur-md border-b border-cursor-border-primary/10">
+          <header className="fixed top-0 left-0 right-0 z-50 bg-cursor-bg-primary/95 backdrop-blur-md border-b border-white/[0.02]">
             <div className="px-6 py-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {/* Icône du logo - crop pour ne montrer que la partie graphique (gauche) */}
@@ -57,15 +58,6 @@ export default function RootLayout({
               {/* Navigation */}
               <nav className="flex items-center gap-1">
                 <Link 
-                  href="/"
-                  className="px-4 py-2 text-sm text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-hover rounded-lg transition-colors flex items-center gap-1.5"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  <span>Revenir aux traitements</span>
-                </Link>
-                <Link 
                   href="/data"
                   className="px-4 py-2 text-sm text-cursor-text-secondary hover:text-cursor-text-primary hover:bg-cursor-hover rounded-lg transition-colors flex items-center gap-1.5"
                 >
@@ -75,6 +67,7 @@ export default function RootLayout({
                   </svg>
                   <span>Paramètres</span>
                 </Link>
+                <LogoutButton />
               </nav>
             </div>
           </header>
