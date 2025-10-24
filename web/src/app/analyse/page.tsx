@@ -863,6 +863,36 @@ function AnalysePageContent() {
               </Stepper>
             </div>
           </div>
+
+          {/* Légende pour RI anomalies en étape 3 */}
+          {currentStep === 3 && selectedTreatments[0] === 'ri-anomalies' && (
+            <div className="card-surface p-4">
+              <h3 className="text-xs font-semibold text-cursor-text-primary mb-3 uppercase tracking-wide">Légende</h3>
+              <div className="space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-3 h-3 rounded-full bg-red-500/20 border border-red-500/40 mt-0.5"></span>
+                  <div>
+                    <div className="text-xs font-medium text-red-400">Sous-déclaration</div>
+                    <div className="text-[10px] text-cursor-text-muted">Écart &lt; {riThresholds.warningThreshold}%</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-3 h-3 rounded-full bg-green-500/20 border border-green-500/40 mt-0.5"></span>
+                  <div>
+                    <div className="text-xs font-medium text-green-400">Conforme</div>
+                    <div className="text-[10px] text-cursor-text-muted">{riThresholds.warningThreshold}% ≤ Écart ≤ +{riThresholds.excellentThreshold}%</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-3 h-3 rounded-full bg-blue-500/20 border border-blue-500/40 mt-0.5"></span>
+                  <div>
+                    <div className="text-xs font-medium text-blue-400">Excellent</div>
+                    <div className="text-[10px] text-cursor-text-muted">Écart &gt; +{riThresholds.excellentThreshold}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 

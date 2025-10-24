@@ -271,7 +271,7 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
   };
 
   return (
-    <div className="card-surface p-6 mb-6 pb-24">
+    <div className="card-surface p-6 mb-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
@@ -322,21 +322,38 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
               </button>
 
               {metiersDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-cursor-bg-elevated border border-cursor-border-primary rounded-lg shadow-xl max-h-80 overflow-y-auto z-30">
-                  {metiers.map(metier => (
-                    <label
-                      key={metier.id}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-cursor-bg-tertiary cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedMetiers.includes(metier.id)}
-                        onChange={() => toggleMetier(metier.id)}
-                        className="w-4 h-4 rounded border-cursor-border-primary text-cursor-accent-button focus:ring-cursor-accent-button"
-                      />
-                      <span className="text-sm text-cursor-text-primary">{metier.name}</span>
-                    </label>
-                  ))}
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1E1E1E] border border-cursor-border-primary rounded-lg shadow-xl max-h-80 overflow-y-auto z-30">
+                  {metiers.map(metier => {
+                    const isSelected = selectedMetiers.includes(metier.id);
+                    return (
+                      <div
+                        key={metier.id}
+                        onClick={() => toggleMetier(metier.id)}
+                        className="flex items-center justify-between px-4 py-2.5 hover:bg-cursor-bg-secondary cursor-pointer transition-colors"
+                      >
+                        <span className="text-sm text-cursor-text-primary">{metier.name}</span>
+                        {/* Toggle switch */}
+                        <button
+                          type="button"
+                          className={`
+                            relative inline-flex h-5 w-9 items-center rounded-full transition-colors
+                            ${isSelected ? 'bg-blue-600' : 'bg-cursor-bg-tertiary border border-cursor-border-primary'}
+                          `}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMetier(metier.id);
+                          }}
+                        >
+                          <span
+                            className={`
+                              inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform
+                              ${isSelected ? 'translate-x-5' : 'translate-x-0.5'}
+                            `}
+                          />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -425,24 +442,6 @@ export function RIAnomalyResults({ results, thresholds = DEFAULT_RI_THRESHOLDS }
         {filteredResults.map(renderResultCard)}
       </div>
 
-      {/* Legend fixe en bas */}
-      <div className="sticky-footer p-4">
-        <div className="text-sm text-cursor-text-secondary space-y-2">
-          <div className="font-medium text-cursor-text-primary mb-2">Légende :</div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500"></span>
-            <span>Sous-déclaration : Écart &lt; {thresholds.warningThreshold}%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-green-500"></span>
-            <span>Conforme : {thresholds.warningThreshold}% ≤ Écart ≤ +{thresholds.excellentThreshold}%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-            <span>Excellent : Écart &gt; +{thresholds.excellentThreshold}%</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

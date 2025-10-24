@@ -196,7 +196,7 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6">
       {/* Card synthèse - style inspiré de "Traitement en cours" */}
       <div className="card-surface p-6">
         {/* Header compact */}
@@ -291,21 +291,38 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
               </button>
 
               {metiersDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-cursor-bg-elevated border border-cursor-border-primary rounded-lg shadow-xl max-h-80 overflow-y-auto z-30">
-                  {metiers.map(metier => (
-                    <label
-                      key={metier.id}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-cursor-bg-tertiary cursor-pointer transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedMetiers.includes(metier.id)}
-                        onChange={() => toggleMetier(metier.id)}
-                        className="w-4 h-4 rounded border-cursor-border-primary text-cursor-accent-button focus:ring-cursor-accent-button"
-                      />
-                      <span className="text-sm text-cursor-text-primary">{metier.name}</span>
-                    </label>
-                  ))}
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1E1E1E] border border-cursor-border-primary rounded-lg shadow-xl max-h-80 overflow-y-auto z-30">
+                  {metiers.map(metier => {
+                    const isSelected = selectedMetiers.includes(metier.id);
+                    return (
+                      <div
+                        key={metier.id}
+                        onClick={() => toggleMetier(metier.id)}
+                        className="flex items-center justify-between px-4 py-2.5 hover:bg-cursor-bg-secondary cursor-pointer transition-colors"
+                      >
+                        <span className="text-sm text-cursor-text-primary">{metier.name}</span>
+                        {/* Toggle switch */}
+                        <button
+                          type="button"
+                          className={`
+                            relative inline-flex h-5 w-9 items-center rounded-full transition-colors
+                            ${isSelected ? 'bg-blue-600' : 'bg-cursor-bg-tertiary border border-cursor-border-primary'}
+                          `}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMetier(metier.id);
+                          }}
+                        >
+                          <span
+                            className={`
+                              inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform
+                              ${isSelected ? 'translate-x-5' : 'translate-x-0.5'}
+                            `}
+                          />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -536,33 +553,6 @@ export function RIAnomalyBatchResults({ results, minMissions = 5, thresholds = D
         )}
       </div>
 
-      {/* Légende fixe en bas */}
-      <div className="sticky-footer p-4">
-        <h3 className="text-sm font-semibold text-cursor-text-primary mb-3">Légende</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-          <div className="flex items-start gap-2">
-            <span className="flex-shrink-0 w-4 h-4 rounded bg-red-500/20 border border-red-500/40 mt-0.5"></span>
-            <div>
-              <div className="font-medium text-red-400">Sous-déclaration</div>
-              <div className="text-xs text-cursor-text-muted">Écart &lt; {thresholds.warningThreshold}%</div>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="flex-shrink-0 w-4 h-4 rounded bg-green-500/20 border border-green-500/40 mt-0.5"></span>
-            <div>
-              <div className="font-medium text-green-400">Conforme</div>
-              <div className="text-xs text-cursor-text-muted">{thresholds.warningThreshold}% ≤ Écart ≤ +{thresholds.excellentThreshold}%</div>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="flex-shrink-0 w-4 h-4 rounded bg-blue-500/20 border border-blue-500/40 mt-0.5"></span>
-            <div>
-              <div className="font-medium text-blue-400">Excellent</div>
-              <div className="text-xs text-cursor-text-muted">Écart &gt; +{thresholds.excellentThreshold}%</div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
