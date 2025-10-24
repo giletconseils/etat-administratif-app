@@ -37,7 +37,8 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
         const data = await response.json();
         setSuggestions(data.results || []);
         setShowDropdown(data.results && data.results.length > 0);
-        setSelectedIndex(-1);
+        // Sélectionner automatiquement le premier résultat
+        setSelectedIndex(data.results && data.results.length > 0 ? 0 : -1);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
         setSuggestions([]);
@@ -103,7 +104,7 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
         break;
       case "ArrowUp":
         e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
         break;
       case "Enter":
       case "Tab":
@@ -123,7 +124,7 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
   return (
     <>
       {/* Backdrop avec blur quand le champ est focus */}
-      {isFocused && (
+      {(isFocused || showDropdown) && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-all duration-300"
           style={{ margin: '-1.5rem' }}
@@ -158,6 +159,17 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
             </div>
           </div>
         </div>
+
+        {/* Badge de navigation affiché au-dessus de l'input */}
+        {(isFocused || showDropdown) && (
+          <div className="flex items-center justify-center mb-2 z-50">
+            <span className="px-2 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded flex items-center gap-1.5">
+              <kbd className="font-mono">↑</kbd>
+              <kbd className="font-mono">↓</kbd>
+              <span>Naviguer</span>
+            </span>
+          </div>
+        )}
 
         <div className={`relative transition-all duration-300 ${isFocused ? 'scale-105 z-50' : 'scale-100'}`}>
         <input
@@ -207,17 +219,14 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
 
         {/* Dropdown des suggestions - effet Dock macOS (ultra large) */}
         {showDropdown && suggestions.length > 0 && (
-          <div className="absolute z-50 left-1/2 -translate-x-1/2 w-[120%] min-w-[600px] mt-3">
-            {/* Dégradé de flou en haut */}
-            <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black via-black/80 to-transparent z-10 pointer-events-none" />
-            
+          <div className="absolute z-50 left-1/2 -translate-x-1/2 w-[120%] min-w-[600px] mt-3 rounded-2xl overflow-hidden">
             {/* Contenu scrollable */}
             <div
               ref={dropdownRef}
               id="network-search-listbox"
               role="listbox"
               className="relative px-4 space-y-2 max-h-80 overflow-y-auto scrollbar-hide"
-              style={{ paddingTop: '10rem', paddingBottom: '10rem' }}
+              style={{ paddingTop: '2rem', paddingBottom: '2rem' }}
             >
             {suggestions.map((result, index) => (
               <div
@@ -260,16 +269,8 @@ export function NetworkSearchBar({ onSiretSelected }: NetworkSearchBarProps) {
               </div>
             ))}
             </div>
-            
-            {/* Dégradé de flou en bas */}
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black via-black/80 to-transparent z-10 pointer-events-none" />
           </div>
         )}
-        </div>
-
-        <div className="text-sm text-cursor-text-muted">
-          💡 Utilisez les flèches ↑↓ pour naviguer, Tab ou Entrée pour
-          sélectionner
         </div>
       </div>
     </>
