@@ -5,6 +5,11 @@ import { verifySessionToken } from "@/lib/auth-edge";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // 🚀 DÉSACTIVER L'AUTH EN DÉVELOPPEMENT LOCAL
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.next();
+  }
+
   // Routes publiques qui ne nécessitent pas d'authentification
   const publicPaths = [
     "/login",
